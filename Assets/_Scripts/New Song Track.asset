@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c7f4b2e1a4b86e43bd8a282a68fcc2c, type: 3}
+  m_Name: New Song Track
+  m_EditorClassIdentifier: 
+  enemyPrefabs:
+  - {fileID: 3540646333975573228, guid: eab2784ca193ae64e9e726eebc3ab5c6, type: 3}
+  notePrefabs:
+  - {fileID: 5423226073453278434, guid: fb677739e9a06d6469e9b276018812a4, type: 3}
+  beats:
+  - {fileID: 11400000, guid: a85f0f6789d09ee49855fa553e1366af, type: 2}
+  - {fileID: 11400000, guid: b3829ac400250d54183794ab2ba275ec, type: 2}
+  - {fileID: 11400000, guid: 5d17f5b984505644ba27f29cd7d852bc, type: 2}
+  - {fileID: 11400000, guid: 096ea144b3c2946448f69ad2ad69d8d7, type: 2}
