@@ -14,15 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   noteData:
     hitLocations: 
-    hitTiming:
-    - 8
+    hitTimings:
+    - 7
     hitTypes: 02000000
-  tempo:
-    bpm: 160
-    timing: 0
-  timeSig:
-    beats: 4
-    note: 4
-    timing: 0
   SectionName: 
   spawnLocation: {x: 0, y: 0, z: 0}

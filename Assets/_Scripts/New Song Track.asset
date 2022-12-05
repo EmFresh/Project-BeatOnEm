@@ -21,3 +21,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: b3829ac400250d54183794ab2ba275ec, type: 2}
   - {fileID: 11400000, guid: 5d17f5b984505644ba27f29cd7d852bc, type: 2}
   - {fileID: 11400000, guid: 096ea144b3c2946448f69ad2ad69d8d7, type: 2}
+  tempo: {fileID: 11400000, guid: c753e5a3673adf64a99086b2a84e69cc, type: 2}

@@ -1,14 +1,17 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class EnemyActions : MonoBehaviour
 {
 	public NoteData noteData;
 	public GameObject hitModel;
+	public Transform root;
 	public float reactTime = 2.1f;
-	private static List<EnemyActions> allActions=new List<EnemyActions>();
+	private static List<EnemyActions> allActions = new List<EnemyActions>();
 
 
 	public int lane = 0;// 0 = centrer, 1 = left, 2 = right
@@ -18,10 +21,12 @@ public class EnemyActions : MonoBehaviour
 	{
 		//Add any initial animation code here!!(NVM DONT DO THAT)
 		allActions.Add(this);
+
+
 	}
 
 	private void OnDestroy()
-	{		
+	{
 		allActions.Remove(this);
 	}
 
@@ -50,13 +55,30 @@ public class EnemyActions : MonoBehaviour
 				switch(noteData.hitTypes[count])
 				{
 				case HitType.TEST1://melee target
-					print("Test1 Triggered");
-					StartCoroutine(AnimateMeleeTarget(time + reactTime, reactTime));
+					/*	print("Test1 Triggered");
+						StartCoroutine(AnimateMeleeTarget(time + reactTime, reactTime));
+					*/
+					StartCoroutine(AnimateNote1(time, time + reactTime, transform.localPosition));
 					break;
 				case HitType.TEST2://dodge target
-					print("Test2 Triggered");
+					/*print("Test2 Triggered");
 					StartCoroutine(AnimateDodgeEnemy(reactTime + time, reactTime));
+					*/
+					StartCoroutine(AnimateNote2(time, time + reactTime, transform.localPosition));
 					break;
+				case HitType.TEST3://dodge target
+					/*print("Test2 Triggered");
+					StartCoroutine(AnimateDodgeEnemy(reactTime + time, reactTime));
+					*/
+					StartCoroutine(AnimateNote3(time, time + reactTime, transform.localPosition));
+					break;
+				case HitType.TEST4://dodge target
+					/*print("Test2 Triggered");
+					StartCoroutine(AnimateDodgeEnemy(reactTime + time, reactTime));
+					*/
+					StartCoroutine(AnimateNote4(time, time + reactTime, transform.localPosition));
+					break;
+
 				default:
 					break;
 				}
@@ -65,7 +87,7 @@ public class EnemyActions : MonoBehaviour
 			}
 		}
 
-		if(last >= timings.Count)
+		if(last >= timings.Count)//automatic cleanup
 			StartCoroutine(OnEnemyEnd(reactTime * 3f));
 	}
 
@@ -133,6 +155,167 @@ public class EnemyActions : MonoBehaviour
 
 
 		GetComponentInChildren<Renderer>().material.color = tmp;
+		yield break;
+	}
+
+
+	IEnumerator AnimateNote1(float timing, float react, Vector3 startLocation = new Vector3())
+	{
+		transform.localPosition = startLocation;
+
+		bool hit = false;
+		UnityAction<HitType> act;
+		NoteHitting.onNotePressed.AddListener(act = (nh) => { if(nh == HitType.TEST1) hit = true; });
+
+		yield return new WaitUntil(() =>
+		{
+			//Animation Logic Here!!
+			if(hit && Mathf.Abs(transform.localPosition.z) < GetComponentInChildren<Collider>().bounds.extents.z * 3)//on completion
+			{
+				HappyBar.onNoteHit.Invoke(.02f);
+				StartCoroutine(OnEnemyEnd(0));
+				return true;
+			}
+			else if((transform.localPosition.z) < -GetComponentInChildren<Collider>().bounds.extents.z * 2)
+			{
+				HappyBar.onNoteMiss.Invoke(.1f);
+				StartCoroutine(OnEnemyEnd(.01f));
+				return true;
+			}
+
+			// Any other logic
+			hit = false;
+
+
+			//move note location
+			float tmp;
+			transform.localPosition = ((Vector3)(Vector2)transform.localPosition) + new Vector3(0, 0, tmp = Mathf.LerpUnclamped(startLocation.z, 0, 1 - (react - clip.time) / (react - timing)));
+
+			return false;
+		});
+
+
+		NoteHitting.onNotePressed.RemoveListener(act);
+		yield break;
+	}
+	IEnumerator AnimateNote2(float timing, float react, Vector3 startLocation = new Vector3())
+	{
+		transform.localPosition = startLocation;
+
+		bool hit = false;
+		UnityAction<HitType> act;
+		NoteHitting.onNotePressed.AddListener(act = (nh) => { if(nh == HitType.TEST2) hit = true; });
+
+		yield return new WaitUntil(() =>
+		{
+			//Animation Logic Here!!
+			if(hit && Mathf.Abs(transform.localPosition.z) < GetComponentInChildren<Collider>().bounds.extents.z * 4)//on completion
+			{
+				HappyBar.onNoteHit.Invoke(.02f);
+				StartCoroutine(OnEnemyEnd(0));
+				return hit;
+			}
+			else if((transform.localPosition.z) < -GetComponentInChildren<Collider>().bounds.extents.z * 2)
+			{
+				HappyBar.onNoteMiss.Invoke(.1f);
+				StartCoroutine(OnEnemyEnd(.01f));
+				return true;
+			}
+
+
+			// Any other logic
+			hit = false;
+
+
+			//move note location
+			float tmp;
+			transform.localPosition = ((Vector3)(Vector2)transform.localPosition) + new Vector3(0, 0, tmp = Mathf.LerpUnclamped(startLocation.z, 0, 1 - (react - clip.time) / (react - timing)));
+
+			return false;
+		});
+
+
+		NoteHitting.onNotePressed.RemoveListener(act);
+		yield break;
+	}
+	IEnumerator AnimateNote3(float timing, float react, Vector3 startLocation = new Vector3())
+	{
+		transform.localPosition = startLocation;
+
+		bool hit = false;
+		UnityAction<HitType> act;
+		NoteHitting.onNotePressed.AddListener(act = (nh) => { if(nh == HitType.TEST3) hit = true; });
+
+		yield return new WaitUntil(() =>
+		{
+			//Animation Logic Here!!
+			if(hit && Mathf.Abs(transform.localPosition.z) < GetComponentInChildren<Collider>().bounds.extents.z * 4)//on completion
+			{
+				HappyBar.onNoteHit.Invoke(.02f);
+				StartCoroutine(OnEnemyEnd(0));
+				return hit;
+			}
+			else if((transform.localPosition.z) < -GetComponentInChildren<Collider>().bounds.extents.z * 2)
+			{
+				HappyBar.onNoteMiss.Invoke(.1f);
+				StartCoroutine(OnEnemyEnd(.01f));
+				return true;
+			}
+
+
+			// Any other logic
+			hit = false;
+
+
+			//move note location
+			float tmp;
+			transform.localPosition = ((Vector3)(Vector2)transform.localPosition) + new Vector3(0, 0, tmp = Mathf.LerpUnclamped(startLocation.z, 0, 1 - (react - clip.time) / (react - timing)));
+
+			return false;
+		});
+
+
+		NoteHitting.onNotePressed.RemoveListener(act);
+		yield break;
+	}
+	IEnumerator AnimateNote4(float timing, float react, Vector3 startLocation = new Vector3())
+	{
+		transform.localPosition = startLocation;
+
+		bool hit = false;
+		UnityAction<HitType> act;
+		NoteHitting.onNotePressed.AddListener(act = (nh) => { if(nh == HitType.TEST4) hit = true; });
+
+		yield return new WaitUntil(() =>
+		{
+			//Animation Logic Here!!
+			if(hit && Mathf.Abs(transform.localPosition.z) < GetComponentInChildren<Collider>().bounds.extents.z * 4)//on completion
+			{
+				HappyBar.onNoteHit.Invoke(.02f);
+				StartCoroutine(OnEnemyEnd(0));
+				return hit;
+			}
+			else if((transform.localPosition.z) < -GetComponentInChildren<Collider>().bounds.extents.z * 2)
+			{
+				HappyBar.onNoteMiss.Invoke(.1f);
+				StartCoroutine(OnEnemyEnd(.01f));
+				return true;
+			}
+
+
+			// Any other logic
+			hit = false;
+
+
+			//move note location
+			float tmp;
+			transform.localPosition = ((Vector3)(Vector2)transform.localPosition) + new Vector3(0, 0, tmp = Mathf.LerpUnclamped(startLocation.z, 0, 1 - (react - clip.time) / (react - timing)));
+
+			return false;
+		});
+
+
+		NoteHitting.onNotePressed.RemoveListener(act);
 		yield break;
 	}
 

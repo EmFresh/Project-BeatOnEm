@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c7f4b2e1a4b86e43bd8a282a68fcc2c, type: 3}
+  m_Name: New Song Track 1
+  m_EditorClassIdentifier: 
+  enemyPrefabs:
+  - {fileID: 8315873459624214268, guid: a03b55aca8a85d342924905e18ba88a5, type: 3}
+  - {fileID: 8464799937158295800, guid: e1cc61dd418eb1443a5741bdf722fc3e, type: 3}
+  - {fileID: 3147126843047234392, guid: 9938f8e6168d7f14e873ef84556ed3b0, type: 3}
+  - {fileID: 3279706431706737087, guid: b291da364557fe1479cd9583601fa981, type: 3}
+  notePrefabs:
+  - {fileID: 8315873459624214268, guid: a03b55aca8a85d342924905e18ba88a5, type: 3}
+  - {fileID: 8464799937158295800, guid: e1cc61dd418eb1443a5741bdf722fc3e, type: 3}
+  - {fileID: 3147126843047234392, guid: 9938f8e6168d7f14e873ef84556ed3b0, type: 3}
+  - {fileID: 3279706431706737087, guid: b291da364557fe1479cd9583601fa981, type: 3}
+  beats: []
+  tempo: {fileID: 11400000, guid: c753e5a3673adf64a99086b2a84e69cc, type: 2}
