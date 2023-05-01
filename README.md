@@ -1,1 +1,3 @@
-Project BeatOnEm
+# Project BeatOnEm
+
+This is a splinter project using the systems from the VR game. And it worked...
