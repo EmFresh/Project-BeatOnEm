@@ -1,155 +1,209 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+
 using UnityEngine;
+using UnityEngine.Events;
+using Unity.Mathematics;
+/*
+loot boxes
+multiple mele weapons
+last hit cyoty time
+ */
 
 public class EnemyActions : MonoBehaviour
 {
-	public NoteData noteData;
-	public GameObject hitModel;
-	public float reactTime = 2.1f;
-	private static List<EnemyActions> allActions=new List<EnemyActions>();
+    public NoteData noteData;
+    public GameObject hitModel;
+    // public Transform root;
+    public float hitWindow = 2.1f;
+    private static List<EnemyActions> allActions = new List<EnemyActions>();
+    public List<HitPoints> points = new List<HitPoints>();
+
+    // Awake is called only once before Start
+    void Awake()
+    {
+        //Add any initial animation code here!!(NVM DONT DO THAT)
+        allActions.Add(this);
 
 
-	public int lane = 0;// 0 = centrer, 1 = left, 2 = right
+    }
 
-	// Awake is called only once before Start
-	void Awake()
-	{
-		//Add any initial animation code here!!(NVM DONT DO THAT)
-		allActions.Add(this);
-	}
-
-	private void OnDestroy()
-	{		
-		allActions.Remove(this);
-	}
-
-	private int last;
-	//public DateTime timer = DateTime.MinValue;
-	public AudioSource clip;
-	void NoteUpdate()
-	{
-		var timings = noteData?.hitTimings;
-		if(timings == null) return;
+    private void OnDestroy()
+    {
+        allActions.Remove(this);
+    }
 
 
-		if(last >= timings.Count) return;
+    // * *
+    //* * *
+    // * *
 
-		for(int count = last; count < timings.Count; ++count)
-		{
-			var time = timings[count] - reactTime;
-
-			if(clip.time - time >= .5f)
-				break;
-
-			if(clip.time >= time)
-			{
-				/*PLACE NOTE LOGIC HERE!!!*/
-
-				switch(noteData.hitTypes[count])
-				{
-				case HitType.TEST1://melee target
-					print("Test1 Triggered");
-					StartCoroutine(AnimateMeleeTarget(time + reactTime, reactTime));
-					break;
-				case HitType.TEST2://dodge target
-					print("Test2 Triggered");
-					StartCoroutine(AnimateDodgeEnemy(reactTime + time, reactTime));
-					break;
-				default:
-					break;
-				}
-
-				last = count + 1;
-			}
-		}
-
-		if(last >= timings.Count)
-			StartCoroutine(OnEnemyEnd(reactTime * 3f));
-	}
-
-	IEnumerator AnimateMeleeTarget(float timing, float react, Vector3 location = new Vector3())
-	{
-		var obj = Instantiate(hitModel, transform);
-		obj.transform.localPosition = Vector3.zero;
-		obj.transform.GetChild(0).localPosition += location;
-		obj.GetComponentInChildren<Renderer>().material.color = new Color(1, 0, 0);
-
-		yield return new WaitUntil(() =>
-		{
-			//Animation Logic Here!!
-			if(clip.time >= timing)//on completion
-			{
-				obj.GetComponentInChildren<Renderer>().material.color = new Color(0, 1, 0);
-				IEnumerator Cleanup()
-				{
-					yield return new WaitForSeconds(react);
-					Destroy(obj);
-				}
-				StartCoroutine(Cleanup());
-				return true;
-			}
-			// Any other logic
-
-			return false;
-		});
-
-		yield break;
-	}
-
-	IEnumerator AnimateDodgeEnemy(float timing, float react)
-	{
-		var tmp = GetComponentInChildren<Renderer>().material.color;
-		GetComponentInChildren<Renderer>().material.color = new Color(1, 1, 0);
-
-		yield return new WaitUntil(() =>
-		{
-			//print("Why this no work?");
-			//Animation Logic Here!!
-			if(clip.time >= timing)//on player can be hit
-			{
-				GetComponentInChildren<Renderer>().material.color = new Color(0, 0, 1);
-				return true;
-			}
-			if(clip.time >= timing - react * .5)//Player not in danger
-			{
-				GetComponentInChildren<Renderer>().material.color = new Color(0, 1, 0);
-				return false;
-			}
-			return false;
-		});
-
-		yield return new WaitUntil(() =>
-		{
-			//print("Why this no work?");
-			//Animation Logic Here!!
-			if(clip.time >= timing + react * .5)//Player not in danger
-				return true;
-
-			return false;
-		});
+    private int last = 0;
+    //public DateTime timer = DateTime.MinValue;
+    public AudioSource clip;
+    void NoteUpdate()
+    {
+        var timings = noteData?.hitTimings;
+        var cTime = clip.time;
+        if(timings == null) return;
 
 
+        if(last >= timings.Count) return;
 
-		GetComponentInChildren<Renderer>().material.color = tmp;
-		yield break;
-	}
+        bool check = false;
+        for(int count = last; count < timings.Count; ++count)
+        {
+            var timing = timings[count];
+
+            if(cTime - timing >= hitWindow * 0.5f)
+            {
+                last = count + 1;
+                continue;
+            }
+            check = true;
+            if(cTime - timing >= -hitWindow * 0.5f && cTime < timings[count])
+            {
+                /*PLACE NOTE LOGIC HERE!!!*/
+                switch(noteData.hitTypes[count])
+                {
+                case HitType.TEST1://melee target
+                    print("Test1 Triggered");
+
+                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, points[0], location: noteData.hitLocations[count]));
+                    //	StartCoroutine(AnimateMeleeTarget(time, time + reactTime, transform.localPosition));
+
+                    break;
+                case HitType.TEST2://dodge target
+                    print("Test2 Triggered");
+                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, points[0], location: noteData.hitLocations[count]));
+                    //  StartCoroutine(AnimateMeleeTarget(timing, hitWindow));
+                    //	StartCoroutine(AnimateNote2(time, time + reactTime, transform.localPosition));
+
+                    break;
+                case HitType.TEST3://dodge target
+                    print("Test2 Triggered");
+                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, points[0], location: noteData.hitLocations[count]));
+                    //  StartCoroutine(AnimateMeleeTarget(timing, hitWindow));
+                    //	StartCoroutine(AnimateNote3(time, time + reactTime, transform.localPosition));
+
+                    break;
+                case HitType.TEST4://dodge target
+                    print("Test2 Triggered");
+                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, points[0], location: noteData.hitLocations[count]));
+                    //  StartCoroutine(AnimateMeleeTarget(timing, hitWindow));
+                    //	StartCoroutine(AnimateNote4(time, time + reactTime, transform.localPosition));
+
+                    break;
+                default:
+                    break;
+                }
+
+                last = count + 1;
+            }
+
+        }
+
+        if(!check)
+            hitWindow = 0;
+
+        if(last >= timings.Count)//automatic cleanup
+            StartCoroutine(OnEnemyEnd(hitWindow * 3f));
+    }
+
+    IEnumerator AnimateMeleeTarget(float timing, float window, HitPoints points, uint location)
+    {
+        var obj = points.CreateHitpointObject(hitModel, location, this.transform);
+        obj.transform.localScale = Vector3.one*1.8f ;
 
 
-	private IEnumerator OnEnemyEnd(float react)
-	{
-		yield return new WaitForSeconds(react);
-		Destroy(gameObject);
-		yield break;
-	}
+        //obj.transform.GetChild(0).localPosition += Vector3.zero;
+        obj.GetComponentInChildren<Renderer>().material.color = new Color(1, 0, 0);
+        IEnumerator Cleanup()
+        {
+            yield return new WaitForSeconds(window);
+            Destroy(obj);
+        }
 
-	// Update is called once per frame
-	void Update()
-	{
-		//if(timer == DateTime.MinValue)
-		//	timer = DateTime.Now;
+        var callback = obj.AddComponent<HayYouSlappedSomthing>();
 
-		NoteUpdate();
-	}
+        callback.onObjectHit.AddListener(() => { Destroy(obj); });
+
+        var targetScales = new List<Vector3>();
+        for(int a = 0; a < obj.transform.childCount; ++a)
+            targetScales.Add(obj.transform.GetChild(a).localScale);
+
+        yield return new WaitUntil(() =>
+        {
+            float i = 0;
+            obj.GetComponentInChildren<Renderer>().material.color =
+            Color.Lerp(Color.red, Color.green,
+            Mathf.Clamp((i =
+            Mathf.InverseLerp(clip.time < timing ?
+            timing - (window * .5f) : timing + (window * .5f),
+            timing, clip.time)) * i, 0, 1));//testing
+
+            for(int a = 0; a < obj.transform.childCount; ++a)
+                obj.transform.GetChild(a).localScale
+                = Vector3.Lerp(targetScales[a], targetScales[a] * 0.7f, Mathf.Clamp(i * i, 0, 1));
+
+
+            //Animation Logic Here!!
+            if(clip.time >= timing)//on note timing 
+            {
+                //obj.GetComponentInChildren<Renderer>().material.color = new Color(0, 1, 0);
+                StartCoroutine(Cleanup());
+            }
+            // Any other logic
+
+            if(clip.time >= timing + window * .5f)//on completion
+                return true;
+
+            return false;
+
+
+        });
+
+        yield break;
+    }
+
+    IEnumerator AnimateEnemyAttack(float timing, float window)
+    {
+        var tmp = GetComponentInChildren<Renderer>().material.color;
+        GetComponentInChildren<Renderer>().material.color = new Color(1, 1, 0);
+
+
+
+        yield return new WaitUntil(() =>
+        {
+            //print("Why this no work?");
+            //Animation Logic Here!!
+            if(clip.time >= timing + window * .5)//Player not in danger
+                return true;
+
+            return false;
+        });
+
+
+
+        GetComponentInChildren<Renderer>().material.color = tmp;
+        yield break;
+    }
+
+
+    private IEnumerator OnEnemyEnd(float react)
+    {
+        yield return new WaitForSeconds(react);
+        Destroy(gameObject);
+        yield break;
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        //if(timer == DateTime.MinValue)
+        //	timer = DateTime.Now;
+
+        NoteUpdate();
+    }
 }

@@ -14,10 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyPrefabs:
   - {fileID: 3540646333975573228, guid: eab2784ca193ae64e9e726eebc3ab5c6, type: 3}
+  - {fileID: 3540646333975573228, guid: eab2784ca193ae64e9e726eebc3ab5c6, type: 3}
+  - {fileID: 3540646333975573228, guid: eab2784ca193ae64e9e726eebc3ab5c6, type: 3}
+  - {fileID: 3540646333975573228, guid: eab2784ca193ae64e9e726eebc3ab5c6, type: 3}
   notePrefabs:
   - {fileID: 5423226073453278434, guid: fb677739e9a06d6469e9b276018812a4, type: 3}
+  hitPoints:
+  - {fileID: 11400000, guid: 7f5c7921acf605446a2bd45bb177d680, type: 2}
   beats:
-  - {fileID: 11400000, guid: a85f0f6789d09ee49855fa553e1366af, type: 2}
   - {fileID: 11400000, guid: b3829ac400250d54183794ab2ba275ec, type: 2}
   - {fileID: 11400000, guid: 5d17f5b984505644ba27f29cd7d852bc, type: 2}
   - {fileID: 11400000, guid: 096ea144b3c2946448f69ad2ad69d8d7, type: 2}
+  tempo: {fileID: 11400000, guid: c753e5a3673adf64a99086b2a84e69cc, type: 2}

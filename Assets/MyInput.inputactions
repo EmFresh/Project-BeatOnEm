@@ -1,0 +1,94 @@
+{
+    "name": "MyInput",
+    "maps": [
+        {
+            "name": "Keyboard Actions",
+            "id": "b9d2d16b-dc34-4517-9f43-0853ab953d93",
+            "actions": [
+                {
+                    "name": "Note 1",
+                    "type": "Button",
+                    "id": "8cf6e479-8101-470a-a572-498e14064e29",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Note 2",
+                    "type": "Button",
+                    "id": "dbae04f8-3d77-4765-aa05-2212ad3b9278",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Note 3",
+                    "type": "Button",
+                    "id": "ad81e936-25e0-4096-80a0-dbec40bba3bc",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Note 4",
+                    "type": "Button",
+                    "id": "27899085-e642-4a48-8944-fa0b97daecdc",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "854a2a82-68e9-41e9-bb19-27917ca159f2",
+                    "path": "<Keyboard>/d",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Note 1",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "d8e79e28-b9ec-4420-9148-41b5eb6aa99e",
+                    "path": "<Keyboard>/f",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Note 2",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "9d373e55-af4a-4d59-a817-8a486cc0feba",
+                    "path": "<Keyboard>/j",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Note 3",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "511fdb97-564d-4e2f-b702-91d50bd77357",
+                    "path": "<Keyboard>/k",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Note 4",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}
