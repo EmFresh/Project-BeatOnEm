@@ -12,19 +12,19 @@ EditorBuildSettings:
     path: Assets/Scenes/EmotionalRhythemGame.unity
     guid: 0e12dc53455917344b0533770073f8d5
   m_configObjects:
-    Unity.XR.Oculus.Settings: {fileID: 11400000, guid: dd518e05c8f29a24893040a65b78e246,
+    Unity.XR.Oculus.Settings: {fileID: 11400000, guid: cdab97502c764304fa9e18f9937174da,
       type: 2}
     Unity.XR.WindowsMR.Settings: {fileID: 11400000, guid: dc5a169419fa04987b057f65238cf3ba,
       type: 2}
-    com.unity.adaptiveperformance.loader_settings: {fileID: 11400000, guid: 951c0c20a90b65f43abe82913b6c22e1,
+    com.unity.adaptiveperformance.loader_settings: {fileID: 11400000, guid: da00599d111a59a46a7bc0494309d714,
       type: 2}
     com.unity.adaptiveperformance.simulator.provider_settings: {fileID: 11400000,
-      guid: 385d0e547d84bab4eb26b9f2ed494c4e, type: 2}
+      guid: 1a2cee663be5ef9498b30fae37863a75, type: 2}
     com.unity.input.settings: {fileID: 11400000, guid: 46cad0fcd2725d84680b5838f5ec3b1f,
       type: 2}
-    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 067b387449a2efd4f8dfec398831fc3e,
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: af598cd84bde93148b6b855377e7399b,
       type: 2}
-    com.unity.xr.openxr.settings4: {fileID: 11400000, guid: 46eff71dbbcb7f84ba7bc2bcf7c01fc0,
+    com.unity.xr.openxr.settings4: {fileID: 11400000, guid: 1156e9c4c994d9741a1803f4947f73f3,
       type: 2}
     xr.sdk.mock-hmd.settings: {fileID: 11400000, guid: c13fd0c8f0381d74c8a5d0bb996cab61,
       type: 2}

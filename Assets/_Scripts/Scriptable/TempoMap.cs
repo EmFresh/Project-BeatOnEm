@@ -2,17 +2,24 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
+
+using UnityEditor.SearchService;
 
 using UnityEngine;
 using UnityEngine.InputSystem.Interactions;
+using UnityEngine.InputSystem.Utilities;
 
- 
+
 
 [Serializable]
 public class Tempo
 {
     //beats per min
     public uint bpm = 0;
+
+    //1/60 = 0.0166667f
+
     //seconds per beat
     public float spb { get { try { return 60f / bpm; } catch { return 0; } } }
     //song time stamp
@@ -28,7 +35,7 @@ public class Tempo
 
     public override string ToString()
     {
-        return 
+        return
             $"bpm:{bpm}\n" +
             $"timing:{timing}";
     }
@@ -44,6 +51,7 @@ public struct TimeSig
     //where in the song ?
     public int timing;
 
+    public static TimeSig HalfTime { get => new TimeSig() { beats = 2, note = 4, timing = 0 }; }
     public static TimeSig CommonTime { get => new TimeSig() { beats = 4, note = 4, timing = 0 }; }
 
 
@@ -65,39 +73,42 @@ public struct TimeSig
 [CreateAssetMenu(menuName = "ScriptableObject/TempoMap")]
 public class TempoMap : ScriptableObject
 {
-    public List<Tempo> tempos { get; private set; }
-    public List<TimeSig> timeSigs { get; private set; }
+    public List<Tempo> tempos;
+    public List<TimeSig> timeSigs;
 
     private void OnEnable()
     {
-        tempos = new List<Tempo>();
-        timeSigs = new List<TimeSig>();
+        // tempos = new List<Tempo>();
+        // timeSigs = new List<TimeSig>();
 
-        tempos.Add(new Tempo() { bpm = 80 });
-        timeSigs.Add(TimeSig.CommonTime);
+        if(tempos.Count == 0)
+            tempos.Add(new Tempo() { bpm = 80 });
+        if(timeSigs.Count == 0)
+            timeSigs.Add(TimeSig.CommonTime);
 
-        tempos.Sort((a, b) => { return a.timing.CompareTo(b.timing); });
+        Sort();
+    }
+
+    public void Sort()
+    {
+        tempos.Sort((a, b) => { return a?.timing.CompareTo(b?.timing) ?? 1; });
         timeSigs.Sort((a, b) => { return a.timing.CompareTo(b.timing); });
     }
-     
+
     public Tempo GetTempo(float noteTime)
     {
         if(tempos.Count == 0) return null;
-
-        tempos.Sort((a, b) => { return a.timing.CompareTo(b.timing); });
 
         foreach(var tmpo in tempos)
             if(tmpo.timing >= noteTime)
                 return tmpo;
 
-        return tempos.Last() ;
+        return tempos.Last();
     }
 
     public TimeSig GetTimeSig(float noteTime)
     {
         if(timeSigs.Count == 0) return TimeSig.CommonTime;
-
-        timeSigs.Sort((a, b) => { return a.timing.CompareTo(b.timing); });
 
         foreach(var tmpo in timeSigs)
             if(tmpo.timing >= noteTime)

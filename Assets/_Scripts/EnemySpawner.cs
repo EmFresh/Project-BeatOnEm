@@ -8,9 +8,7 @@ using UnityEngine.TextCore.Text;
 public class EnemySpawner : MonoBehaviour
 {
     public SongTrack track;
-    public Transform parentObj;
-    public ChangeBGImage bg;
-    public List<Texture2D> textrues;
+    public Transform parentObj;  
     public List<LanePoint> lanePoint;
     public float reactTime = 2.1f;
 
