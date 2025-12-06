@@ -1,5 +1,6 @@
 {
-    "name": "MyInput",
+    "version": 1,
+    "name": "Game Input",
     "maps": [
         {
             "name": "Keyboard Actions",
@@ -9,7 +10,7 @@
                     "name": "Note 1",
                     "type": "Button",
                     "id": "8cf6e479-8101-470a-a572-498e14064e29",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -18,7 +19,7 @@
                     "name": "Note 2",
                     "type": "Button",
                     "id": "dbae04f8-3d77-4765-aa05-2212ad3b9278",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false

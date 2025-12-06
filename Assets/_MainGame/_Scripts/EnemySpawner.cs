@@ -73,7 +73,7 @@ public class EnemySpawner : MonoBehaviour
                 GameObject obj = null;
                 var notespace = parentObj.transform.GetChild(0).GetComponent<Collider>().bounds.extents.x / 2;
 
-                switch(time.Item2.hitTypes[0])
+                switch(time.Item2.hitType[0])
                 {
                 case HitType.TEST1:
                     obj = createEnemy(0);
@@ -94,7 +94,7 @@ public class EnemySpawner : MonoBehaviour
 
                 var ctrl = obj.AddComponent<EnemyControl>();
                 float quarterTimeBias = 0.05f;//a short time before the notes get to the enemy
-                ctrl.Init(mapMover, lanePoint[(int)(time.Item2.hitTypes[0] - 1) % 3], clip, Mathf.Min(clip.time, time.Item1) + .05f, time.Item1 - quarterTimeBias);
+                ctrl.Init(mapMover, lanePoint[(int)(time.Item2.hitType[0] - 1) % 3], clip, Mathf.Min(clip.time, time.Item1) + .05f, time.Item1 - quarterTimeBias);
 
                 var act = obj.AddComponent<EnemyActions>();
 

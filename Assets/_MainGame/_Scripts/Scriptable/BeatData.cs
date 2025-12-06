@@ -30,24 +30,26 @@ public enum HitType
 }
 
 [Serializable]
-public class NoteData
+public struct NoteData
 {
 	//note stuff
 
 	/// <summary>
 	/// places the enemy can be hit (actual locations will be objects on enemy)
 	/// </summary>
-	public List<uint> hitLocations;
+	 public uint hitLocation;
 
 	/// <summary>
 	/// the timing of each hit location
 	/// </summary>
-	public List<float> hitTimings;
+	public float hitTiming;
 
 	/// <summary>
 	/// how the target should be hit (will make it a single value later)
 	/// </summary>
-	public List<HitType> hitTypes;
+	public HitType hitType;
+
+
 
 }
 
@@ -58,16 +60,20 @@ public class BeatData : ScriptableObject
 	public static bool pausing = false;
 	public static bool hallogram = false;
 
-	public NoteData noteData = null;
+	public HashSet<NoteData> noteData = null;
+	public double startTime = 0,endTime =0;
 
+	public void AddNote(uint hitLocation, float hitTiming, HitType hitType)
+	{
+		noteData.Add(new NoteData() { hitLocation=hitLocation, hitTiming=hitTiming, hitType= hitType});
+    }
+    //spawn stuff
 
-	//spawn stuff
-
-	/// <summary>
-	/// what a song section name is called. can be used for some sort of 
-	/// results screen later (and organization, practice, UI, etc.)
-	/// </summary>
-	public string SectionName;
+    /// <summary>
+    /// what a song section name is called. can be used for some sort of 
+    /// results screen later (and organization, practice, UI, etc.)
+    /// </summary>
+    public string SectionName;
 
 	/// <summary>
 	/// the location the enemy spawns

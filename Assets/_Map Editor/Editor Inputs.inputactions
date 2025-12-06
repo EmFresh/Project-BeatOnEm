@@ -1,0 +1,77 @@
+{
+    "version": 1,
+    "name": "Editor Inputs",
+    "maps": [
+        {
+            "name": "Main",
+            "id": "2498445b-1078-4711-bb6e-6b12877fe84d",
+            "actions": [
+                {
+                    "name": "Seek Click",
+                    "type": "Button",
+                    "id": "6fc507f4-3783-4251-afac-eda7d7e40d08",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Seek Enhance",
+                    "type": "Value",
+                    "id": "ea4ebe5c-df89-4e62-9630-d699616db8aa",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "3d76e580-3cd8-45d8-bc52-ea96ff5d041e",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Seek Click",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "One Modifier",
+                    "id": "7afbe29f-0192-4c83-8099-53924275deb3",
+                    "path": "OneModifier",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Seek Enhance",
+                    "isComposite": true,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "modifier",
+                    "id": "9587e1c5-852b-4621-8380-d5c81afbcea7",
+                    "path": "<Keyboard>/ctrl",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Seek Enhance",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "binding",
+                    "id": "00b4c1f2-cf36-4363-942b-1af3b77944b0",
+                    "path": "<Mouse>/scroll",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Seek Enhance",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

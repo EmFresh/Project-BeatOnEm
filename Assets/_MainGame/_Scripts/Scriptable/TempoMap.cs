@@ -2,26 +2,50 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-
-using UnityEditor.SearchService;
 
 using UnityEngine;
-using UnityEngine.InputSystem.Interactions;
-using UnityEngine.InputSystem.Utilities;
 
+[Serializable]
+public class BPM
+{
+    public BPM(float bpm = 60) => this.bpm = bpm;
 
+    public static implicit operator float(BPM bpm) => bpm.bpm;
+    public static implicit operator BPM(float bpm) => new BPM(bpm);
+    
+    public string toString() => bpm.ToString();
+
+    public float bpm;
+    //1/60 = 0.0166667f
+
+    //seconds per beat
+    public float spb
+    {
+        get
+        {
+            if(_bpm != bpm)
+                try { diviser = 1f / bpm; }
+                catch { diviser = 0; }
+
+            _bpm = bpm;
+            return 60f * diviser;
+        }
+    }
+
+    [HideInInspector]
+    public float diviser = 0;
+
+    [HideInInspector]
+    public float _bpm = 0;
+}
 
 [Serializable]
 public class Tempo
 {
-    //beats per min
-    public uint bpm = 0;
+    //beats per min 
+    public BPM bpm = 80;
 
-    //1/60 = 0.0166667f
 
-    //seconds per beat
-    public float spb { get { try { return 60f / bpm; } catch { return 0; } } }
     //song time stamp
     public float timing = 0;
 
@@ -30,7 +54,7 @@ public class Tempo
     {
         var currentTime = noteTime - timing;
 
-        return ((MathF.Floor(currentTime / spb) + 1) * spb) + timing;
+        return (float)((Math.Floor(currentTime / (double)bpm.spb) + 1) * bpm.spb) + timing;
     }
 
     public override string ToString()
@@ -39,6 +63,9 @@ public class Tempo
             $"bpm:{bpm}\n" +
             $"timing:{timing}";
     }
+
+    public Tempo Clone() => new Tempo() { bpm = bpm, timing = timing };
+
 }
 
 [Serializable]
@@ -58,7 +85,7 @@ public struct TimeSig
     public float GetNextBeat(float noteTime, Tempo tempo)
     {
         var currentTime = noteTime - timing;
-        return (MathF.Floor(currentTime / tempo.spb) + 1) % beats;
+        return (MathF.Floor(currentTime / tempo.bpm.spb) + 1) % beats;
     }
 
     public override string ToString()
@@ -78,8 +105,10 @@ public class TempoMap : ScriptableObject
 
     private void OnEnable()
     {
-        // tempos = new List<Tempo>();
-        // timeSigs = new List<TimeSig>();
+        if(tempos == null)
+            tempos = new List<Tempo>();
+        if(timeSigs == null)
+            timeSigs = new List<TimeSig>();
 
         if(tempos.Count == 0)
             tempos.Add(new Tempo() { bpm = 80 });

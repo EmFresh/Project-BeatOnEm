@@ -7,7 +7,7 @@ using System.IO;
 
 
 
-public class BeatmapReader : MonoBehaviour
+public class BeatMapReader : MonoBehaviour
 {
     [SerializeField] string fileName;
 

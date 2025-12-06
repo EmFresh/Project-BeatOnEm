@@ -2,14 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.InputSystem;
-using static MyInput;
+using UnityEngine.InputSystem; 
 
-
-public class NoteHitting : MonoBehaviour, IKeyboardActionsActions
+public class NoteHitting : MonoBehaviour 
 {
-	MyInput inputs;
-	KeyboardActionsActions acts;
+	 
 	public HitType type;
 
 	// Update is called once per frame
@@ -21,21 +18,7 @@ public class NoteHitting : MonoBehaviour, IKeyboardActionsActions
 	public static UnityEvent<HitType> onNotePressed = new UnityEvent<HitType>();
 	public static UnityEvent<HitType> onNoteReleased = new UnityEvent<HitType>();
 
-	private void OnEnable()
-	{
-		if(inputs == null)
-		{
-			inputs = new MyInput();
-			acts = inputs.KeyboardActions;
-			acts.SetCallbacks(this);
-		}
-		acts.Enable();
-	}
-
-	private void OnDisable()
-	{
-		acts.Disable();
-	}
+	 
 
 	void hitButton(InputAction.CallbackContext context)
 	{

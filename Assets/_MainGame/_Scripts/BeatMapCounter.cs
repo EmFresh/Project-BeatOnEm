@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem.Android;
 
-[RequireComponent(typeof(EnemySpawner))]
+ 
 public class BeatMapCounter : MonoBehaviour
 {
     public AudioClip tickSound;
@@ -12,20 +12,22 @@ public class BeatMapCounter : MonoBehaviour
     public UnityEvent<Tempo, TimeSig> onTick { get; private set; } = new UnityEvent<Tempo, TimeSig>();
     public UnityEvent<Tempo, TimeSig> onTock { get; private set; } = new UnityEvent<Tempo, TimeSig>();
 
-    TempoMap tempoMap;
-    AudioSource clip;
+    [SerializeField] AudioSource source;
+    [SerializeField] TempoMap tempoMap;
 
     private void Awake()
     {
-        clip = GetComponent<EnemySpawner>().clip;
-        tempoMap = GetComponent<EnemySpawner>().track.tempo;
+        if(!source)
+            source = GetComponent<EnemySpawner>()?.clip;
+        if(!tempoMap)
+            tempoMap = GetComponent<EnemySpawner>()?.track.tempoMap;
         tempoMap.Sort();
 
         onTick.AddListener((tempo, timeSig) =>
         {
             if(tickSound != null)
             {
-                clip?.PlayOneShot(tickSound);
+                source?.PlayOneShot(tickSound);
                 // print("Tick");
             }
         });
@@ -33,7 +35,7 @@ public class BeatMapCounter : MonoBehaviour
         {
             if(tockSound != null)
             {
-                clip?.PlayOneShot(tockSound);
+                source?.PlayOneShot(tockSound);
                 //    print("tock");
             }
         });
@@ -49,12 +51,12 @@ public class BeatMapCounter : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        var time = clip.time;
+        var time = source.time;
 
         if(time >= nextBeatTime && currentTempo != null)
         {
 
-            if(currentTimeSig.GetNextBeat(time, currentTempo)-1 == 0)
+            if(currentTimeSig.GetNextBeat(time, currentTempo) - 1 == 0)
                 onTick.Invoke(currentTempo, currentTimeSig);
             else
                 onTock.Invoke(currentTempo, currentTimeSig);
@@ -63,11 +65,11 @@ public class BeatMapCounter : MonoBehaviour
 
         }
 
-        if(time < nextBeatTime && Mathf.Abs(time - nextBeatTime) < (currentTempo?.spb ?? 0)) return;
+        if(time < nextBeatTime && Mathf.Abs(time - nextBeatTime) < (currentTempo?.bpm.spb ?? 0)) return;
 
         print("change tempo");
 
-        currentTempo = tempoMap.GetTempo((time + currentTempo?.spb ?? 0));
+        currentTempo = tempoMap.GetTempo((time + currentTempo?.bpm.spb ?? 0));
 
         nextBeatTime = currentTempo.GetNextBeat(time);
 

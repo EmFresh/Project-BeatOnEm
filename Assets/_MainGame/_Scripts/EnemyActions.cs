@@ -65,32 +65,32 @@ public class EnemyActions : MonoBehaviour
             if(cTime - timing >= -hitWindow * 0.5f && cTime < timings[count])
             {
                 /*PLACE NOTE LOGIC HERE!!!*/
-                switch(noteData.hitTypes[count])
+                switch(noteData.hitType[count])
                 {
                 case HitType.TEST1://melee target
                     print("Test1 Triggered");
 
-                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, points[0], location: noteData.hitLocations[count]));
+                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, points[0], location: noteData.hitLocation[count]));
                     //	StartCoroutine(AnimateMeleeTarget(time, time + reactTime, transform.localPosition));
 
                     break;
                 case HitType.TEST2://dodge target
                     print("Test2 Triggered");
-                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, points[0], location: noteData.hitLocations[count]));
+                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, points[0], location: noteData.hitLocation[count]));
                     //  StartCoroutine(AnimateMeleeTarget(timing, hitWindow));
                     //	StartCoroutine(AnimateNote2(time, time + reactTime, transform.localPosition));
 
                     break;
                 case HitType.TEST3://dodge target
                     print("Test2 Triggered");
-                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, points[0], location: noteData.hitLocations[count]));
+                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, points[0], location: noteData.hitLocation[count]));
                     //  StartCoroutine(AnimateMeleeTarget(timing, hitWindow));
                     //	StartCoroutine(AnimateNote3(time, time + reactTime, transform.localPosition));
 
                     break;
                 case HitType.TEST4://dodge target
                     print("Test2 Triggered");
-                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, points[0], location: noteData.hitLocations[count]));
+                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, points[0], location: noteData.hitLocation[count]));
                     //  StartCoroutine(AnimateMeleeTarget(timing, hitWindow));
                     //	StartCoroutine(AnimateNote4(time, time + reactTime, transform.localPosition));
 
