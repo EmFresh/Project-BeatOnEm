@@ -8,12 +8,12 @@ public class NoteEditorPlacer : MonoBehaviour
 
     public void PlaceNoteAtCurrentTime(GameObject notePrefab)
     {
-        if(mapEditManager.seekBar == null || mapEditManager.mapTrack == null || notePrefab == null)
+        if(mapEditManager.seekBar == null || mapEditManager.MapTrack == null || notePrefab == null)
             throw new System.Exception("Missing references in NoteEditorPlacer");
 
 
 
-        BeatData noteData = ScriptableObject.CreateInstance<BeatData>();
+        BeatData noteData = new BeatData();
 
 
     }

@@ -3,7 +3,7 @@ using UnityEngine;
 public class AutoPointLocation : MonoBehaviour
 {
     public Vector3 point;
-    public HitPoints hitPoints;
+    public HitLocations hitPoints;
     // Update is called once per frame
     void Update()
     {

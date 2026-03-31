@@ -1,11 +1,13 @@
 using System;
+using System.Collections;
+using System.Linq;
 
 using UnityEngine;
+using UnityEngine.Audio;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using UnityEngine.UIElements;
-using System.Linq;
 [RequireComponent(typeof(RectTransform), typeof(EventTrigger))]
 public class SeekBar : MonoBehaviour
 {
@@ -26,7 +28,7 @@ public class SeekBar : MonoBehaviour
     [field: SerializeField] public bool snap { get; set; } = true;
     [field: SerializeField] public bool fallow { get; set; } = true;
     public float currentTime = -1;
-
+    public UnityEvent<float> onSeekBarMoved = new UnityEvent<float>();
     bool vertical { get => m_vertical; set { SetBarOrientation(m_vertical = value, m_thickness); } }
     float thickness { get => m_thickness; set { SetBarOrientation(m_vertical, m_thickness = value); } }
 
@@ -52,30 +54,29 @@ public class SeekBar : MonoBehaviour
                     float timeNorm = m_vertical ?
                         (pointPressed.y - rect.yMin) / rect.height :
                         (pointPressed.x - rect.xMin) / rect.width;
-                    var clip = mapEditManager.audioSource.clip;
+                    var clip = mapEditManager.AudioSource.clip;
                     float time = timeNorm * clip.length;
 
-                    if(snap)
-                    {
-                        var tempo = mapEditManager.mapTrack.tempoMap.GetTempo(time).Clone();
-                        var timeSig = mapEditManager.tempoMarkManager.timeSig;
-                        tempo.bpm *= timeSig.beats / timeSig.note;
 
-                        var beat = tempo.GetNextBeat(time);
-                        time = beat - time < time - beat - tempo.bpm.spb ? beat : beat - tempo.bpm.spb;
-                    }
 
-                    //  m_creator.audioSource.time = time;
-                    SetLocation(time, fallow);
+                    //  m_creator.AudioSource.time = time;
+                    SetLocation(time, fallow, snap);
+                    //StartCoroutine(UpdateVisualsCoroutine());
+                    //IEnumerator UpdateVisualsCoroutine()
+                    //{
+                    //    yield return null;
+                    //    mapEditManager.UpdateVisuals();
+                    //}
+
                 }
             })
         );
 
-        bool tmpFallow = true;
+        //bool tmpFallow = true;
         var rect = mapEditManager.timelineImageCreator.GetComponent<ScrollRect>();
-        
-       rect.onValueChanged.AddListener((pos) => { SetLocation(currentTime, false); });
 
+        rect.onValueChanged.AddListener((pos) => { SetLocation(currentTime); });
+        SetLocation(0);
     }
 
 
@@ -83,6 +84,7 @@ public class SeekBar : MonoBehaviour
     {
         m_seekBarTrans.SetAsLastSibling();
     }
+
     public void SetBarOrientation(bool vertical, float barThickness)
     {
         m_seekBarTrans.anchorMin = new Vector2(vertical ? 0 : .5f, vertical ? .5f : 0);
@@ -95,10 +97,12 @@ public class SeekBar : MonoBehaviour
         m_seekBarTrans.localPosition = new Vector2(vertical ? rect.center.x : rect.xMin, vertical ? rect.yMin : rect.center.y);
     }
 
+    bool InRange(float val, float min, float max) => val >= min && val <= max;
+
     public void Fallow(float time)
 
     {
-        var clip = mapEditManager.audioSource.clip;
+        var clip = mapEditManager.AudioSource.clip;
         var timebarPos = time / clip.length;
 
         var sr = mapEditManager.timelineImageCreator.GetComponent<ScrollRect>();
@@ -110,7 +114,6 @@ public class SeekBar : MonoBehaviour
 
 
         var tmpPos = (m_vertical ? scrollPos.y : scrollPos.x);
-        bool InRange(float val, float min, float max) => val >= min && val <= max;
 
         float fallowPoint = .5f;
         float min = .25f, max = .75f;
@@ -128,12 +131,25 @@ public class SeekBar : MonoBehaviour
 
     }
 
-    public void SetLocation(float time, bool fallow = false)
+    public void SetLocation(float time, bool fallow = false, bool snap = false)
     {
         if(!mapEditManager.timelineImageCreator) throw new NullReferenceException("Timeline Creater was not set");
         if(!m_seekBarTrans) throw new NullReferenceException("Time Bar was not set");
 
-        var source = mapEditManager.audioSource;
+        if(snap)
+        {
+            var tempo = mapEditManager.MapTrack.tempoMap.GetTempo(time).Clone();
+            var timeSig = mapEditManager.MapTrack.tempoMap.GetTimeSig(time).Clone();
+
+
+            tempo.bpm *= timeSig.note / 4f;//adjust tempo to fit the beat divisions of the time signature
+
+            // var offset = (tempo.bpm.spb * .5f);
+            var beat = tempo.GetNextBeat(time);
+            time = (beat - time < time - beat - tempo.bpm.spb ? beat : (beat - (float)tempo.bpm.spb));
+        }
+
+        var source = mapEditManager.AudioSource;
         var clip = source.clip;
         var timebarPos = time / clip.length;
 
@@ -144,11 +160,14 @@ public class SeekBar : MonoBehaviour
             m_vertical ? m_seekBarTrans.localPosition.x : pos.x,
             m_vertical ? pos.y : m_seekBarTrans.localPosition.y);
 
+
         if(fallow)
             Fallow(time);
 
-        m_seekBarTrans.transform.SetAsLastSibling();
+        onSeekBarMoved.Invoke(currentTime = time);
 
-        currentTime = time;
+        m_seekBarTrans.transform.SetAsLastSibling();
     }
+
+
 }

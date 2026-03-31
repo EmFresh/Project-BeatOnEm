@@ -12,22 +12,18 @@ public class BeatMapCounter : MonoBehaviour
     public UnityEvent<Tempo, TimeSig> onTick { get; private set; } = new UnityEvent<Tempo, TimeSig>();
     public UnityEvent<Tempo, TimeSig> onTock { get; private set; } = new UnityEvent<Tempo, TimeSig>();
 
-    [SerializeField] AudioSource source;
-    [SerializeField] TempoMap tempoMap;
+    [SerializeField] MapEditManager manager;
 
     private void Awake()
     {
-        if(!source)
-            source = GetComponent<EnemySpawner>()?.clip;
-        if(!tempoMap)
-            tempoMap = GetComponent<EnemySpawner>()?.track.tempoMap;
-        tempoMap.Sort();
+        
+        manager.MapTrack.tempoMap.Sort();
 
         onTick.AddListener((tempo, timeSig) =>
         {
             if(tickSound != null)
             {
-                source?.PlayOneShot(tickSound);
+                manager.AudioSource?.PlayOneShot(tickSound);
                 // print("Tick");
             }
         });
@@ -35,7 +31,7 @@ public class BeatMapCounter : MonoBehaviour
         {
             if(tockSound != null)
             {
-                source?.PlayOneShot(tockSound);
+                manager.AudioSource?.PlayOneShot(tockSound);
                 //    print("tock");
             }
         });
@@ -51,7 +47,7 @@ public class BeatMapCounter : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        var time = source.time;
+        var time = manager.AudioSource.time;
 
         if(time >= nextBeatTime && currentTempo != null)
         {
@@ -69,11 +65,11 @@ public class BeatMapCounter : MonoBehaviour
 
         print("change tempo");
 
-        currentTempo = tempoMap.GetTempo((time + currentTempo?.bpm.spb ?? 0));
+        currentTempo = manager.MapTrack.tempoMap.GetTempo((float)(time + currentTempo?.bpm.spb ?? 0));
 
         nextBeatTime = currentTempo.GetNextBeat(time);
 
-        currentTimeSig = tempoMap.GetTimeSig(nextBeatTime);
+        currentTimeSig = manager.MapTrack.tempoMap.GetTimeSig(nextBeatTime);
 
 
     }

@@ -5,7 +5,7 @@ using UnityEngine.Timeline;
 
 using System.Linq;
 
-[RequireComponent(  typeof(EventTrigger))]
+[RequireComponent(typeof(EventTrigger))]
 public class TempoMark : MonoBehaviour
 {
     public float time;
@@ -13,7 +13,7 @@ public class TempoMark : MonoBehaviour
     {
         SeekBar seekBar = GetComponentInParent<SeekBar>();
 
-        var eventTriggers =GetComponent<EventTrigger>();
+        var eventTriggers = GetComponent<EventTrigger>();
         eventTriggers.triggers.Add(new EventTrigger.Entry() { eventID = EventTriggerType.PointerClick });
         eventTriggers.triggers.Last().callback.AddListener(
             new UnityAction<BaseEventData>((data) =>
@@ -22,7 +22,7 @@ public class TempoMark : MonoBehaviour
 
                 if(ped.button == PointerEventData.InputButton.Left)
                     seekBar.SetLocation(time);
-              //  print($"Pointer Entered Tempo Mark at time: {time}");
+                //  print($"Pointer Entered Tempo Mark at time: {time}");
 
             })
         );

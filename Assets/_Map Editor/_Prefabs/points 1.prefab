@@ -44,5 +44,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 376d1feb5cb167f41952f3c70ade4dc0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  hitPoints: {fileID: 11400000, guid: 9390145b12d07664687affb03b499ac4, type: 2}
+  hitPoints: {fileID: 11400000, guid: bf43863c7741dfa42928781cb30ee2aa, type: 2}
   point: {fileID: 5423226073453278434, guid: fb677739e9a06d6469e9b276018812a4, type: 3}

@@ -14,6 +14,92 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyPrefabs: []
   notePrefabs: []
-  hitPoints: []
-  beats: []
-  tempoMap: {fileID: 11400000, guid: e1701c6c610441a4b9e36078af2b9edd, type: 2}
+  hitLocationsList:
+  - points:
+    - {x: -0.5, y: 1, z: 0}
+    - {x: 0.5, y: 1, z: 0}
+    - {x: -1, y: 0, z: 0}
+    - {x: 0, y: 0, z: 0}
+    - {x: 1, y: 0, z: 0}
+    - {x: -0.5, y: -1, z: 0}
+    - {x: 0.5, y: -1, z: 0}
+    offsetPos: {x: 0, y: 0, z: 0}
+    offsetScale: {x: 1, y: 1, z: 1}
+  - points:
+    - {x: -0.5, y: 1, z: 0}
+    - {x: 0.5, y: 1, z: 0}
+    - {x: -1, y: 0, z: 0}
+    - {x: 1, y: 0, z: 0}
+    - {x: -0.5, y: -1, z: 0}
+    - {x: 0.5, y: -1, z: 0}
+    offsetPos: {x: 0, y: 0, z: 0}
+    offsetScale: {x: 1, y: 1, z: 1}
+  beats:
+  - track: {fileID: 11400000}
+    noteDataList:
+    - hitLocation: 4
+      hitTiming: 12.409091
+      hitType: 0
+    - hitLocation: 2
+      hitTiming: 12.681818
+      hitType: 0
+    - hitLocation: 3
+      hitTiming: 12.954545
+      hitType: 0
+    - hitLocation: 3
+      hitTiming: 14.863636
+      hitType: 0
+    - hitLocation: 4
+      hitTiming: 11.045454
+      hitType: 0
+    - hitLocation: 2
+      hitTiming: 11.045454
+      hitType: 0
+    - hitLocation: 3
+      hitTiming: 11.045454
+      hitType: 0
+    hitLocationsIndex: 0
+    laneIndex: 1
+    startTime: 11.045454
+    endTime: 15.40909
+    SectionName: 
+    spawnLocation: {x: 0, y: 0, z: 0}
+  - track: {fileID: 11400000}
+    noteDataList:
+    - hitLocation: 3
+      hitTiming: 14.045454
+      hitType: 0
+    - hitLocation: 3
+      hitTiming: 12.954545
+      hitType: 0
+    hitLocationsIndex: 0
+    laneIndex: 0
+    startTime: 12.954545
+    endTime: 14.59091
+    SectionName: 
+    spawnLocation: {x: 0, y: 0, z: 0}
+  - track: {fileID: 11400000}
+    noteDataList:
+    - hitLocation: 3
+      hitTiming: 13.227272
+      hitType: 0
+    - hitLocation: 3
+      hitTiming: 12.681818
+      hitType: 0
+    hitLocationsIndex: 0
+    laneIndex: 2
+    startTime: 12.681818
+    endTime: 13.77273
+    SectionName: 
+    spawnLocation: {x: 0, y: 0, z: 0}
+  tempoMap:
+    tempos:
+    - bpm:
+        bpm: 110
+        diviser: 0.009090909
+        _bpm: 110
+      timing: 4.5
+    timeSigs:
+    - beats: 4
+      note: 8
+      timing: 4.5

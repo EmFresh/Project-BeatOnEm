@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 using UnityEngine;
 using UnityEngine.Events;
@@ -13,12 +14,12 @@ last hit cyoty time
 
 public class EnemyActions : MonoBehaviour
 {
-    public NoteData noteData;
+    public List<NoteData> noteData;
     public GameObject hitModel;
     // public Transform root;
     public float hitWindow = 2.1f;
     private static List<EnemyActions> allActions = new List<EnemyActions>();
-    public List<HitPoints> points = new List<HitPoints>();
+    public  HitLocations points = new HitLocations();
 
     // Awake is called only once before Start
     void Awake()
@@ -44,15 +45,15 @@ public class EnemyActions : MonoBehaviour
     public AudioSource clip;
     void NoteUpdate()
     {
-        var timings = noteData?.hitTimings;
+        var timings = noteData.Select(v=>v.hitTiming).ToList();
         var cTime = clip.time;
         if(timings == null) return;
 
 
-        if(last >= timings.Count) return;
+        if(last >= timings.Count()) return;
 
         bool check = false;
-        for(int count = last; count < timings.Count; ++count)
+        for(int count = last; count < timings.Count(); ++count)
         {
             var timing = timings[count];
 
@@ -65,32 +66,32 @@ public class EnemyActions : MonoBehaviour
             if(cTime - timing >= -hitWindow * 0.5f && cTime < timings[count])
             {
                 /*PLACE NOTE LOGIC HERE!!!*/
-                switch(noteData.hitType[count])
+                switch(noteData.ElementAt(count).hitType)
                 {
                 case HitType.TEST1://melee target
                     print("Test1 Triggered");
 
-                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, points[0], location: noteData.hitLocation[count]));
+                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, points, location: noteData.ElementAt(count).hitLocation));
                     //	StartCoroutine(AnimateMeleeTarget(time, time + reactTime, transform.localPosition));
 
                     break;
                 case HitType.TEST2://dodge target
                     print("Test2 Triggered");
-                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, points[0], location: noteData.hitLocation[count]));
+                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, points, location: noteData.ElementAt(count).hitLocation));
                     //  StartCoroutine(AnimateMeleeTarget(timing, hitWindow));
                     //	StartCoroutine(AnimateNote2(time, time + reactTime, transform.localPosition));
 
                     break;
                 case HitType.TEST3://dodge target
                     print("Test2 Triggered");
-                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, points[0], location: noteData.hitLocation[count]));
+                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, points, location: noteData.ElementAt(count).hitLocation));
                     //  StartCoroutine(AnimateMeleeTarget(timing, hitWindow));
                     //	StartCoroutine(AnimateNote3(time, time + reactTime, transform.localPosition));
 
                     break;
                 case HitType.TEST4://dodge target
                     print("Test2 Triggered");
-                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, points[0], location: noteData.hitLocation[count]));
+                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, points, location: noteData.ElementAt(count).hitLocation));
                     //  StartCoroutine(AnimateMeleeTarget(timing, hitWindow));
                     //	StartCoroutine(AnimateNote4(time, time + reactTime, transform.localPosition));
 
@@ -107,11 +108,11 @@ public class EnemyActions : MonoBehaviour
         if(!check)
             hitWindow = 0;
 
-        if(last >= timings.Count)//automatic cleanup
+        if(last >= timings.Count())//automatic cleanup
             StartCoroutine(OnEnemyEnd(hitWindow * 3f));
     }
 
-    IEnumerator AnimateMeleeTarget(float timing, float window, HitPoints points, uint location)
+    IEnumerator AnimateMeleeTarget(float timing, float window, HitLocations points, int location)
     {
         var obj = points.CreateHitpointObject(hitModel, location, this.transform);
         obj.transform.localScale = Vector3.one*1.8f ;

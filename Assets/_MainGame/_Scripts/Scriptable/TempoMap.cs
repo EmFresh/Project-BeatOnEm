@@ -3,7 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
+using UnityEditor.Experimental.GraphView;
+
 using UnityEngine;
+
+using static Unity.Burst.Intrinsics.X86.Avx;
 
 [Serializable]
 public class BPM
@@ -12,8 +16,8 @@ public class BPM
 
     public static implicit operator float(BPM bpm) => bpm.bpm;
     public static implicit operator BPM(float bpm) => new BPM(bpm);
-    
-    public string toString() => bpm.ToString();
+
+    public override string ToString() => bpm.ToString();
 
     public float bpm;
     //1/60 = 0.0166667f
@@ -54,7 +58,12 @@ public class Tempo
     {
         var currentTime = noteTime - timing;
 
-        return (float)((Math.Floor(currentTime / (double)bpm.spb) + 1) * bpm.spb) + timing;
+        var amount = Mathf.FloorToInt(currentTime / bpm.spb);
+        var val = ((amount + 1) * bpm.spb) + timing;
+        var check = (Mathf.FloorToInt(val / bpm.spb) == Mathf.FloorToInt(noteTime / bpm.spb));//needed
+        val = check ? (((amount + 2) * bpm.spb) + timing) : val;
+
+        return val;
     }
 
     public override string ToString()
@@ -69,14 +78,14 @@ public class Tempo
 }
 
 [Serializable]
-public struct TimeSig
+public class TimeSig
 {
     //numerator
     public int beats;
     //denominator
     public int note;
     //where in the song ?
-    public int timing;
+    public float timing;
 
     public static TimeSig HalfTime { get => new TimeSig() { beats = 2, note = 4, timing = 0 }; }
     public static TimeSig CommonTime { get => new TimeSig() { beats = 4, note = 4, timing = 0 }; }
@@ -85,7 +94,8 @@ public struct TimeSig
     public float GetNextBeat(float noteTime, Tempo tempo)
     {
         var currentTime = noteTime - timing;
-        return (MathF.Floor(currentTime / tempo.bpm.spb) + 1) % beats;
+        return (Mathf.FloorToInt(currentTime / tempo.bpm.spb) + 1) % beats;
+
     }
 
     public override string ToString()
@@ -95,15 +105,19 @@ public struct TimeSig
             $"note:{note}\n" +
             $"timing:{timing}";
     }
+
+    public TimeSig Clone() => new TimeSig() { beats = beats, note = note, timing = timing };
 }
 
-[CreateAssetMenu(menuName = "ScriptableObject/TempoMap")]
-public class TempoMap : ScriptableObject
+[Serializable]
+public class TempoMap
 {
     public List<Tempo> tempos;
     public List<TimeSig> timeSigs;
 
-    private void OnEnable()
+    public TempoMap() { Init(); }
+
+    public void Init()
     {
         if(tempos == null)
             tempos = new List<Tempo>();
@@ -121,29 +135,54 @@ public class TempoMap : ScriptableObject
     public void Sort()
     {
         tempos.Sort((a, b) => { return a?.timing.CompareTo(b?.timing) ?? 1; });
-        timeSigs.Sort((a, b) => { return a.timing.CompareTo(b.timing); });
+        timeSigs.Sort((a, b) => { return a?.timing.CompareTo(b.timing) ?? 1; });
+    }
+
+    public void AddTempo(float bpm, float timing) =>
+      AddTempo(new Tempo() { bpm = bpm, timing = timing });
+    public void AddTempo(Tempo tempo)
+    {
+        tempos.Add(tempo);
+        Sort();
+    }
+    public void RemoveTempo(float time) =>
+        RemoveTempo(GetTempo(time));
+    public void RemoveTempo(Tempo tempo)
+    {
+        tempos.Remove(tempo);
+        Sort();
+    }
+
+    public void AddTimeSig(int beats, int note, float timing) =>
+        AddTimeSig(new TimeSig() { beats = beats, note = note, timing = timing });
+    public void AddTimeSig(TimeSig timeSig)
+    {
+        timeSigs.Add(timeSig);
+        Sort();
+    }
+    public void RemoveTimeSig(float time) =>
+       RemoveTimeSig(GetTimeSig(time));
+    public void RemoveTimeSig(TimeSig tempo)
+    {
+        timeSigs.Remove(tempo);
+        Sort();
     }
 
     public Tempo GetTempo(float noteTime)
     {
         if(tempos.Count == 0) return null;
 
-        foreach(var tmpo in tempos)
-            if(tmpo.timing >= noteTime)
-                return tmpo;
-
-        return tempos.Last();
+        try { return tempos.Last(t => t.timing <= noteTime); }
+        catch { return tempos.First(); }
     }
 
     public TimeSig GetTimeSig(float noteTime)
     {
-        if(timeSigs.Count == 0) return TimeSig.CommonTime;
+        if(timeSigs.Count == 0) return null;
 
-        foreach(var tmpo in timeSigs)
-            if(tmpo.timing >= noteTime)
-                return tmpo;
+        try { return timeSigs.Last(t => t.timing <= noteTime); }
+        catch { return timeSigs.First(); }
 
-        return timeSigs.Last();
     }
 
     public void Clear()

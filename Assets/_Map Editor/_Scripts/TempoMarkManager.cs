@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -12,8 +13,8 @@ using static UnityEditor.Searcher.SearcherWindow.Alignment;
 
 public class TempoMarkManager : MonoBehaviour
 {
-    public MapEditManager mapEditManager; 
-    public TimeSig timeSig = new TimeSig() { beats = 10, note = 4 };
+    public MapEditManager mapEditManager;
+    //public TimeSig timeSig = new TimeSig() { beats = 10, note = 4 };
 
     [SerializeField] private ScrollRect rect;
     [SerializeField] private GameObject tmpMarker;
@@ -35,12 +36,12 @@ public class TempoMarkManager : MonoBehaviour
         marker.localPosition = new Vector2(vertical ? rect.center.x : rect.xMin, vertical ? rect.yMin : rect.center.y);
     }
 
-    public void PlaceMarker(RectTransform marker, float time, float diration, bool vertical, RectTransform content)
+    public void PlaceMarker(RectTransform marker, float time, float duration, bool vertical, RectTransform content)
     {
 
-        // var clip = m_creator.audioSource.clip;
-        // var source = m_creator.audioSource;
-        var timebarPos = (time / diration);
+        // var clip = m_creator.AudioSource.clip;
+        // var source = m_creator.AudioSource;
+        var timebarPos = (time / duration);
 
         var contentRect = rect.content;
         var pos = Vector2.Lerp(contentRect.rect.min, contentRect.rect.max, timebarPos);
@@ -54,20 +55,20 @@ public class TempoMarkManager : MonoBehaviour
 
     public void CreateMarker(float time, float widthP = 1)
     {
-        var tempo = mapEditManager.mapTrack.tempoMap.GetTempo(time);
-
-        var beat = tempo.GetNextBeat(time);
+        //var tempo = mapEditManager.MapTrack.tempoMap.GetTempo(time);
+        //
+        //var beat = tempo.GetNextBeat(time);
 
         beatMarkers.Add(Instantiate(tmpMarker, rect.content, false));
         var marker = beatMarkers.Last();
         var markerTrans = marker.GetComponent<RectTransform>();
         var tempoMark = marker.AddComponent<TempoMark>();
-        tempoMark.time = time; 
-    
+        tempoMark.time = time;
+
 
         SetMarkerOrientation(marker.GetComponent<RectTransform>(), vertical, 5, widthP);
 
-        PlaceMarker(markerTrans, time, mapEditManager.audioSource.clip.length, vertical, rect.content);
+        PlaceMarker(markerTrans, time, mapEditManager.AudioSource.clip.length, vertical, rect.content);
     }
 
     public void MarkerUpdate()
@@ -83,72 +84,72 @@ public class TempoMarkManager : MonoBehaviour
 
         var viewSizeNorm = rt.sizeDelta / sr.content.sizeDelta;//view size in relation to content size
 
-        var songPosPercent = scrollPos.y - scrollPos.y * viewSizeNorm.y;
+        var songPosPercent = vertical ?
+            scrollPos.y - scrollPos.y * viewSizeNorm.y :
+            scrollPos.x - scrollPos.x * viewSizeNorm.x;
 
 
+        var startTime = Mathf.Max(0, songPosPercent) * mapEditManager.AudioSource.clip.length;
+        var endTime = startTime + viewSizeNorm.y * mapEditManager.AudioSource.clip.length;
 
-        var startTime = Mathf.Max(0, songPosPercent) * mapEditManager.audioSource.clip.length;
-        var endTime = startTime + viewSizeNorm.y * mapEditManager.audioSource.clip.length;
-
-
-        
-        var divisions = timeSig.beats / timeSig.note;
         while(startTime < endTime)
         {
-            var tempo = mapEditManager.mapTrack.tempoMap.GetTempo(startTime);
-            var timeSigneture = mapEditManager.mapTrack.tempoMap.GetTimeSig(startTime);
-            var beats = timeSigneture.beats / timeSigneture.note * timeSigneture.beats;
+            var tempo = mapEditManager.MapTrack.tempoMap.GetTempo(startTime).Clone();
+            var timeSig = mapEditManager.MapTrack.tempoMap.GetTimeSig(startTime).Clone();
 
-            tempo = tempo.Clone();
-            tempo.bpm *= divisions;
-            var currentBeat = (int)((startTime - tempo.timing) / tempo.bpm.spb);
+            var beatsCalc = timeSig.beats * (timeSig.note / 4d);
+            tempo.bpm *= timeSig.note / 4f;//adjust tempo to fit the beat divisions of the time signature
+
+            startTime = tempo.GetNextBeat(startTime) - tempo.bpm.spb;
+            var currentBeat = Mathf.Round(((tempo.GetNextBeat(startTime) - tempo.bpm.spb - tempo.timing) / tempo.bpm.spb));//needs to be done this way
 
             float widthP = .8f;
-            //int period = 6;
-            var beatOfBar = (currentBeat) % (timeSig.beats);
+            var beatOfBar = (currentBeat) % (beatsCalc);
 
             if(beatOfBar != 0)
             {
+                //beatOfBar--;
+
                 int divCount = 0;
 
                 int pow = 2;
 
-                // if(timesig % 5 == 0)
-                // {
-                //     float check = 0;
-                //     while(-(check = Mathf.Pow(pow, divCount)) + check * .5f - (divCount - 1) < timesig) ;
-                // }
-                // else
-                if(timeSig.beats % 3 == 0)
+
+                if(beatsCalc % 3 == 0)
                 {
                     float check = 0;
-                    float val = 0;
 
-                    while((check = Mathf.Pow(pow, ++divCount)) - check * .5 + check * .25 < (timeSig.beats / 2)) ;
-                    //divCount--;
+                    while((check = Mathf.Pow(pow, ++divCount)) - check * .5 + check * .25 < (beatsCalc)) ;
+
+
                 }
                 else
-                    while(Mathf.Pow(pow, ++divCount) < (timeSig.beats / 2)) ;
-
-                // divCount -= pow == 3 ? 1 : 0;
+                {
+                    while(Mathf.Pow(pow, ++divCount) < (beatsCalc)) ;
+                }
 
                 for(int a = divCount; a > 0; --a)
                 {
-                    var check = Mathf.Pow(pow, a);//=
-                    float calc =
+                    var check = Math.Pow(pow, a);//=2^a 
 
-                        (timeSig.beats % 3) == 0 ?
-                        beatOfBar % (check = (float)(check - check * .5 + check * .25)) :
-                        beatOfBar % check;
-
-
-                    if(check > (timeSig.beats / 2))
+                    if(check > (beatsCalc / 2))//never change this
                         continue;
+
+                    var checkOfBar =
+                         beatOfBar;
+
+
+                    var calc =
+                       (beatsCalc % 3) == 0 ?
+                       checkOfBar % (check = (check - check * .5 + check * .25)) :
+                       checkOfBar % check;
+
+
 
 
                     if(calc == 0)
                     {
-                        widthP /= (divCount - a) + 1;
+                        widthP /= Mathf.Clamp((divCount - a) + 1, 2, divCount + 1);
                         break;
                     }
                     else if(a == 1)

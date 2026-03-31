@@ -8,7 +8,7 @@ using UnityEngine.TextCore.Text;
 public class EnemySpawner : MonoBehaviour
 {
     public SongTrack track;
-    public Transform parentObj;  
+    public Transform parentObj;
     public List<LanePoint> lanePoint;
     public float reactTime = 2.1f;
 
@@ -18,9 +18,10 @@ public class EnemySpawner : MonoBehaviour
     private void Awake()
     {
         var check = clip?.isPlaying ?? false;
+        mapMover = FindFirstObjectByType<WorldControl>();
+
         if(check)
             clip?.Pause();
-        mapMover = FindFirstObjectByType<WorldControl>();
         if(check)
             clip?.Play();
 
@@ -30,7 +31,7 @@ public class EnemySpawner : MonoBehaviour
 
     int last = 0, texNum = 0;
     bool init = true;
-    List<Tuple<float, NoteData>> timings = new List<Tuple<float, NoteData>>();
+    List<(float, BeatData)> timings = new List<(float, BeatData)>();
     private void SpawnUpdate()
     {
         if(!track) return;
@@ -40,7 +41,7 @@ public class EnemySpawner : MonoBehaviour
             track.beats.Sort((a, b) => { return a?.spawnTime.CompareTo(b?.spawnTime) ?? 1; });
             foreach(var beat in track.beats)
                 if((beat?.spawnTime ?? float.PositiveInfinity) != float.PositiveInfinity)
-                    timings.Add(new Tuple<float, NoteData>(beat.spawnTime, beat.noteData));
+                    timings.Add((beat.startTime, beat));
 
             init = false;
         }
@@ -73,46 +74,34 @@ public class EnemySpawner : MonoBehaviour
                 GameObject obj = null;
                 var notespace = parentObj.transform.GetChild(0).GetComponent<Collider>().bounds.extents.x / 2;
 
-                switch(time.Item2.hitType[0])
-                {
-                case HitType.TEST1:
-                    obj = createEnemy(0);
-                    break;
-                case HitType.TEST2:
-                    obj = createEnemy(1);
-                    break;
-                case HitType.TEST3:
-                    obj = createEnemy(2);
-                    break;
-                    //	case HitType.TEST4:
-                    //		obj = createEnemy(1);
-                    //		break;
-                }
+
+                obj = createEnemy(time.Item2.laneIndex);
+
 
                 if(obj == null) continue;
                 //	obj.transform.localPosition -= (Vector3)(Vector2)obj.GetComponentInChildren<MeshFilter>().mesh.bounds.min;
 
                 var ctrl = obj.AddComponent<EnemyControl>();
                 float quarterTimeBias = 0.05f;//a short time before the notes get to the enemy
-                ctrl.Init(mapMover, lanePoint[(int)(time.Item2.hitType[0] - 1) % 3], clip, Mathf.Min(clip.time, time.Item1) + .05f, time.Item1 - quarterTimeBias);
+                ctrl.Init(mapMover, lanePoint[time.Item2.laneIndex % 3], clip, Mathf.Min(clip.time, time.Item1) + .05f, time.Item1 - quarterTimeBias);
 
                 var act = obj.AddComponent<EnemyActions>();
 
 
-                act.points.AddRange(track.hitPoints);
-                act.noteData = time.Item2;
+                act.points = track.hitLocationsList[time.Item2.hitLocationsIndex];
+                act.noteData = time.Item2.noteDataList;
                 act.hitWindow = reactTime * .33f;
                 act.hitModel = track.notePrefabs[0];
                 act.clip = clip;
 
-                if(track.hitPoints.Count > 0)
-                    foreach(var phantomObj in track.hitPoints[0].points)
-                    {
-                        var thing = track.hitPoints[0].CreateHitpointObject(act.hitModel, phantomObj, act.transform);
 
-                        thing.GetComponentInChildren<Renderer>().material.color =
-                            thing.GetComponentInChildren<Renderer>().material.color * new Color(1, 1, 1, 0.5f);
-                    }
+                foreach(var phantomObj in act?.points?.points)
+                {
+                    var thing = act.points.CreateHitpointObject(act.hitModel, phantomObj, act.transform);
+
+                    thing.GetComponentInChildren<Renderer>().material.color =
+                        thing.GetComponentInChildren<Renderer>().material.color * new Color(1, 1, 1, 0.5f);
+                }
 
                 last = count + 1;
             }

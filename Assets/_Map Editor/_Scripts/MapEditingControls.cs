@@ -28,9 +28,7 @@ public class MapEditingControls : MonoBehaviour
         inputActions?.Disable();
     }
 
-    List<RaycastResult> results = new List<RaycastResult>();
-    Vector2 scrollPos;
-    Coroutine scrollCoroutine = null;
+    List<RaycastResult> results = new List<RaycastResult>(); 
     public void EnhanceTimeline(CallbackContext input)
     {
         results.Clear();
@@ -60,10 +58,7 @@ public class MapEditingControls : MonoBehaviour
             var val = input.ReadValue<Vector2>();
             float pos = Mathf.Clamp01(vert ? 1 - scrollRect.normalizedPosition.y : scrollRect.normalizedPosition.x);
 
-            // scrollRect.content.pivot = new Vector2(
-            //     vert ? 0 : scrollRect.normalizedPosition.x,
-            //     vert ? 1 - scrollRect.normalizedPosition.y : 1);
-
+            
             var delta = scrollRect.content.sizeDelta +
                     new Vector2(
                         scrollRect.vertical ? 0 : timeline.GetComponent<RectTransform>().sizeDelta.x,
