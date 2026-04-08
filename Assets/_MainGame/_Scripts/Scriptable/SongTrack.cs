@@ -31,7 +31,7 @@ public class SongTrack : ScriptableObject
         tempoMap.Init();
     }
 
-    public BeatData  GetEnemy(int lane, float time)
+    public BeatData  GetEnemy(int lane, double time)
     {
         var enemies = GetEnemies(time);
 
@@ -43,7 +43,7 @@ public class SongTrack : ScriptableObject
         return null;
     }
 
-    public List<BeatData> GetEnemies(float time)
+    public List<BeatData> GetEnemies(double time)
     {
         return beats?.FindAll(beat => time >= beat.startTime && time <= beat.endTime);
     }

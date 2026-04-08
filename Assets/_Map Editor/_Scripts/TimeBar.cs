@@ -14,11 +14,11 @@ public class TimeBar : MonoBehaviour
     [SerializeField] float m_thickness = 5;
     [SerializeField] bool m_fallow = true;
     [SerializeField] bool m_vertical = true;
-    public float currentTime = -1;
-    public UnityEvent<float> onTimeBarMoved = new UnityEvent<float>();
+    public double currentTime = -1;
+    public UnityEvent<double> onTimeBarMoved = new UnityEvent<double>();
 
-    bool vertical { get => m_vertical; set { SetBarOrientation(m_vertical = value, m_thickness); } }
-    float thickness { get => m_thickness; set { SetBarOrientation(m_vertical, m_thickness = value); } }
+    bool Vertical { get => m_vertical; set { SetBarOrientation(m_vertical = value, m_thickness); } }
+    float Thickness { get => m_thickness; set { SetBarOrientation(m_vertical, m_thickness = value); } }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Awake()
@@ -45,17 +45,17 @@ public class TimeBar : MonoBehaviour
         if(!m_timeBarTrans) throw new NullReferenceException("Time Bar was not set");
         //  timeBar. = Vector3.Lerp();
 
-        SetLocation(mapEditManager.AudioSource.time, mapEditManager.AudioSource.isPlaying ? m_fallow : false);
+        SetLocation(mapEditManager.AudioSource.AccurateTime(), mapEditManager.AudioSource.isPlaying ? m_fallow : false);
 
 
         m_timeBarTrans.transform.SetAsLastSibling();
     }
 
-    public void Fallow(float time)
+    public void Fallow(double time)
 
     {
         var clip = mapEditManager.AudioSource.clip;
-        var timebarPos = time / clip.length;
+        var timebarPos = time / clip.AccurateLength();
 
         var sr = mapEditManager.timelineImageCreator.GetComponent<ScrollRect>();
         var rt = mapEditManager.timelineImageCreator.GetComponent<RectTransform>();
@@ -66,15 +66,15 @@ public class TimeBar : MonoBehaviour
 
 
         var tmpPos = (m_vertical ? scrollPos.y : scrollPos.x);
-        bool InRange(float val, float min, float max) => val >= min && val <= max;
+        bool InRange(double val, double min, double max) => val >= min && val <= max;
 
         float fallowPoint = .5f;
         float min = .0f, max = .5f;
-        if(!InRange(timebarPos + Mathf.Lerp(0, m_vertical ? viewSizeNorm.y : viewSizeNorm.x, timebarPos),
+        if(!InRange(timebarPos + Mathf.Lerp(0, m_vertical ? viewSizeNorm.y : viewSizeNorm.x, (float)timebarPos),
             tmpPos + (m_vertical ? viewSizeNorm.y : viewSizeNorm.x) * min, tmpPos + (m_vertical ? viewSizeNorm.y : viewSizeNorm.x) * max))
         {
-            tmpPos = Mathf.Clamp01((timebarPos +
-                Mathf.Lerp(0, m_vertical ? viewSizeNorm.y : viewSizeNorm.x, timebarPos)) -
+            tmpPos = Mathf.Clamp01(((float)timebarPos +
+                Mathf.Lerp(0, m_vertical ? viewSizeNorm.y : viewSizeNorm.x, (float)timebarPos)) -
                 (m_vertical ? viewSizeNorm.y : viewSizeNorm.x) * fallowPoint);
         }
 
@@ -84,17 +84,17 @@ public class TimeBar : MonoBehaviour
 
     }
 
-    public void SetLocation(float time, bool fallow = false)
+    public void SetLocation(double time, bool fallow = false)
     {
         if(!mapEditManager.timelineImageCreator) throw new NullReferenceException("Timeline Creater was not set");
         if(!m_timeBarTrans) throw new NullReferenceException("Time Bar was not set");
 
         var source = mapEditManager.AudioSource;
         var clip = source.clip;
-        var timebarPos = time / clip.length;
+        var timebarPos = time / clip.AccurateLength();
 
         var rect = GetComponent<RectTransform>().rect;
-        var pos = Vector2.Lerp(rect.min, rect.max, timebarPos);
+        var pos = Vector2.Lerp(rect.min, rect.max, (float)timebarPos);
 
         m_timeBarTrans.localPosition = new Vector2(
             m_vertical ? m_timeBarTrans.localPosition.x : pos.x,

@@ -47,13 +47,14 @@ public class MapEditManager : ActionHistory, ISongManager
         void ShortAudioPlay(float duration)
         {
             var clip = GetComponent<AudioSource>(); clip.clip = AudioSource.clip;
-            clip.time = seekBar.currentTime;
+            clip.SetAccurateTime(seekBar.currentTime);
             StartCoroutine(StartStop());
             IEnumerator StartStop()
             {
                 clip.Play();
                 yield return new WaitForSeconds(duration);
-                clip.Stop();
+                clip.Pause();
+
             }
         }
 
@@ -72,9 +73,9 @@ public class MapEditManager : ActionHistory, ISongManager
         if(Keyboard.current.spaceKey.wasPressedThisFrame)
         {
             if(!AudioSource.isPlaying)
-                AudioSource.time = seekBar.currentTime;
+                AudioSource.SetAccurateTime(seekBar.currentTime);
 
-            if(AudioSource.isPlaying) AudioSource.Stop();
+            if(AudioSource.isPlaying) AudioSource.Pause();
             else AudioSource.Play();
 
         }
@@ -84,7 +85,7 @@ public class MapEditManager : ActionHistory, ISongManager
 
     }
 
-    public void AddTempo(float BPM, float time, bool nested = false)
+    public void AddTempo(float BPM, double time, bool nested = false)
     {
         MapTrack.tempoMap.AddTempo(BPM, time);
         tempoMarkManager.MarkerUpdate();
@@ -102,7 +103,7 @@ public class MapEditManager : ActionHistory, ISongManager
             }
         }, nested);
     }
-    public void AddTimeSig(int beats, int note, float time, bool nested = false)
+    public void AddTimeSig(int beats, int note, double time, bool nested = false)
     {
         MapTrack.tempoMap.AddTimeSig(beats, note, time);
         tempoMarkManager.MarkerUpdate();
@@ -121,7 +122,7 @@ public class MapEditManager : ActionHistory, ISongManager
         }, nested);
     }
 
-    public void EditTempo(float tempo, float time, bool nested = false)
+    public void EditTempo(float tempo, double time, bool nested = false)
     {
         var oldTempo = MapTrack.tempoMap.GetTempo(time).Clone();
 
@@ -141,7 +142,7 @@ public class MapEditManager : ActionHistory, ISongManager
             }
         }, nested);
     }
-    public void EditTimeSig(int beats, int note, float time, bool nested = false)
+    public void EditTimeSig(int beats, int note, double time, bool nested = false)
     {
         var oldSig = MapTrack.tempoMap.GetTimeSig(time).Clone();
         var sig = MapTrack.tempoMap.GetTimeSig(time);
@@ -164,7 +165,7 @@ public class MapEditManager : ActionHistory, ISongManager
         }, nested);
     }
 
-    public void RemoveTempo(float time, bool nested = false)
+    public void RemoveTempo(double time, bool nested = false)
     {
         var oldTempo = MapTrack.tempoMap.GetTempo(time).Clone();
         MapTrack.tempoMap.RemoveTempo(time);
@@ -183,7 +184,7 @@ public class MapEditManager : ActionHistory, ISongManager
             }
         }, nested);
     }
-    public void RemoveTimeSig(float time, bool nested = false)
+    public void RemoveTimeSig(double time, bool nested = false)
     {
         var oldTimSig = MapTrack.tempoMap.GetTimeSig(time).Clone();
         MapTrack.tempoMap.RemoveTimeSig(time);
@@ -203,7 +204,7 @@ public class MapEditManager : ActionHistory, ISongManager
         }, nested);
     }
 
-    public void AddEnemy(int lane, int hitLocationsIndex, float duration, float spawnTime, bool nested = false)
+    public void AddEnemy(int lane, int hitLocationsIndex, double duration, double spawnTime, bool nested = false)
     {
 
 
@@ -309,7 +310,7 @@ public class MapEditManager : ActionHistory, ISongManager
         }, nested);
     }
 
-    public void RemoveNote(int lane, float time, int hitLocation, HitType hitType, float timePad, bool nested = false)
+    public void RemoveNote(int lane, double time, int hitLocation, HitType hitType, float timePad, bool nested = false)
     {
 
         var pile = AddToTheBodyPile.pile.Find((pile) => pile.laneNum == lane);
@@ -417,7 +418,7 @@ public class MapEditManager : ActionHistory, ISongManager
 
             foreach(var note in notes)
                 //visualizer.SetColour2D(note.hitLocation, Color.green);
-                visualizer.SetColour2D(note.hitLocation, Color.Lerp(Color.green, Color.white, Mathf.InverseLerp(note.hitTiming - timePad, note.hitTiming + timePad, time) - .5f));
+                visualizer.SetColour2D(note.hitLocation, Color.Lerp(Color.green, Color.white, Mathf.InverseLerp((float)note.hitTiming - timePad, (float)note.hitTiming + timePad, (float)time) - .5f));
 
 
 

@@ -8,7 +8,7 @@ using System.Linq;
 [RequireComponent(typeof(EventTrigger))]
 public class TempoMark : MonoBehaviour
 {
-    public float time;
+    public double time;
     void Awake()
     {
         SeekBar seekBar = GetComponentInParent<SeekBar>();

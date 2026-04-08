@@ -36,7 +36,7 @@ public class TempoMarkManager : MonoBehaviour
         marker.localPosition = new Vector2(vertical ? rect.center.x : rect.xMin, vertical ? rect.yMin : rect.center.y);
     }
 
-    public void PlaceMarker(RectTransform marker, float time, float duration, bool vertical, RectTransform content)
+    public void PlaceMarker(RectTransform marker, double time, float duration, bool vertical, RectTransform content)
     {
 
         // var clip = m_creator.AudioSource.clip;
@@ -44,7 +44,7 @@ public class TempoMarkManager : MonoBehaviour
         var timebarPos = (time / duration);
 
         var contentRect = rect.content;
-        var pos = Vector2.Lerp(contentRect.rect.min, contentRect.rect.max, timebarPos);
+        var pos = Vector2.Lerp(contentRect.rect.min, contentRect.rect.max, (float)timebarPos);
 
         marker.localPosition = new Vector2(
             vertical ? marker.localPosition.x : pos.x,
@@ -53,7 +53,7 @@ public class TempoMarkManager : MonoBehaviour
         marker.SetAsLastSibling();
     }
 
-    public void CreateMarker(float time, float widthP = 1)
+    public void CreateMarker(double time, float widthP = 1)
     {
         //var tempo = mapEditManager.MapTrack.tempoMap.GetTempo(time);
         //
@@ -89,23 +89,24 @@ public class TempoMarkManager : MonoBehaviour
             scrollPos.x - scrollPos.x * viewSizeNorm.x;
 
 
-        var startTime = Mathf.Max(0, songPosPercent) * mapEditManager.AudioSource.clip.length;
-        var endTime = startTime + viewSizeNorm.y * mapEditManager.AudioSource.clip.length;
+        int startTime = (int)(Mathf.Max(0, songPosPercent) * mapEditManager.AudioSource.clip.LengthMilli());
+        int endTime = (int)(startTime + viewSizeNorm.y * mapEditManager.AudioSource.clip.LengthMilli());
 
         while(startTime < endTime)
         {
-            var tempo = mapEditManager.MapTrack.tempoMap.GetTempo(startTime).Clone();
-            var timeSig = mapEditManager.MapTrack.tempoMap.GetTimeSig(startTime).Clone();
+            var tempo = mapEditManager.MapTrack.tempoMap.GetTempo(startTime / 1000d).Clone();
+            var timeSig = mapEditManager.MapTrack.tempoMap.GetTimeSig(startTime / 1000d).Clone();
 
             var beatsCalc = timeSig.beats * (timeSig.note / 4d);
             tempo.bpm *= timeSig.note / 4f;//adjust tempo to fit the beat divisions of the time signature
 
-            startTime = tempo.GetNextBeat(startTime) - tempo.bpm.spb;
-            var currentBeat = Mathf.Round(((tempo.GetNextBeat(startTime) - tempo.bpm.spb - tempo.timing) / tempo.bpm.spb));//needs to be done this way
+            startTime = tempo.GetNextBeatMilli(startTime) - tempo.bpm.mspb;
+            var currentBeat = (((tempo.GetNextBeatMilli(startTime) - tempo.bpm.mspb - tempo.TimingMilli) / tempo.bpm.mspb));//needs to be done this way
 
             float widthP = .8f;
             var beatOfBar = (currentBeat) % (beatsCalc);
 
+            //I'm calling this solved don't look inside
             if(beatOfBar != 0)
             {
                 //beatOfBar--;
@@ -120,8 +121,6 @@ public class TempoMarkManager : MonoBehaviour
                     float check = 0;
 
                     while((check = Mathf.Pow(pow, ++divCount)) - check * .5 + check * .25 < (beatsCalc)) ;
-
-
                 }
                 else
                 {
@@ -135,17 +134,12 @@ public class TempoMarkManager : MonoBehaviour
                     if(check > (beatsCalc / 2))//never change this
                         continue;
 
-                    var checkOfBar =
-                         beatOfBar;
-
+                    var checkOfBar = beatOfBar;
 
                     var calc =
                        (beatsCalc % 3) == 0 ?
                        checkOfBar % (check = (check - check * .5 + check * .25)) :
                        checkOfBar % check;
-
-
-
 
                     if(calc == 0)
                     {
@@ -155,16 +149,17 @@ public class TempoMarkManager : MonoBehaviour
                     else if(a == 1)
                         widthP /= divCount + 2;
                 }
-
             }
 
-            CreateMarker(startTime, widthP: widthP);
-            var beat = tempo.GetNextBeat(startTime);
+            CreateMarker(startTime / 1000d, widthP: widthP);
+            var beat = tempo.GetNextBeatMilli(startTime);
+
+            if(beat <= startTime)
+                throw new Exception("Beats are repeating");
+
             startTime = beat;
             //if(currentBeat > beatOfBar) return;
         }
-
-
 
     }
 

@@ -27,8 +27,8 @@ public class SeekBar : MonoBehaviour
     [SerializeField] bool m_vertical = true;
     [field: SerializeField] public bool snap { get; set; } = true;
     [field: SerializeField] public bool fallow { get; set; } = true;
-    public float currentTime = -1;
-    public UnityEvent<float> onSeekBarMoved = new UnityEvent<float>();
+    public double currentTime = -1;
+    public UnityEvent<double> onSeekBarMoved = new UnityEvent<double>();
     bool vertical { get => m_vertical; set { SetBarOrientation(m_vertical = value, m_thickness); } }
     float thickness { get => m_thickness; set { SetBarOrientation(m_vertical, m_thickness = value); } }
 
@@ -55,7 +55,7 @@ public class SeekBar : MonoBehaviour
                         (pointPressed.y - rect.yMin) / rect.height :
                         (pointPressed.x - rect.xMin) / rect.width;
                     var clip = mapEditManager.AudioSource.clip;
-                    float time = timeNorm * clip.length;
+                    var time = timeNorm * clip.AccurateLength();
 
 
 
@@ -97,9 +97,9 @@ public class SeekBar : MonoBehaviour
         m_seekBarTrans.localPosition = new Vector2(vertical ? rect.center.x : rect.xMin, vertical ? rect.yMin : rect.center.y);
     }
 
-    bool InRange(float val, float min, float max) => val >= min && val <= max;
+    bool InRange(double val, double min, double max) => val >= min && val <= max;
 
-    public void Fallow(float time)
+    public void Fallow(double time)
 
     {
         var clip = mapEditManager.AudioSource.clip;
@@ -117,11 +117,11 @@ public class SeekBar : MonoBehaviour
 
         float fallowPoint = .5f;
         float min = .25f, max = .75f;
-        if(!InRange(timebarPos + Mathf.Lerp(0, m_vertical ? viewSizeNorm.y : viewSizeNorm.x, timebarPos),
+        if(!InRange(timebarPos + Mathf.Lerp(0, m_vertical ? viewSizeNorm.y : viewSizeNorm.x, (float)timebarPos),
             tmpPos + (m_vertical ? viewSizeNorm.y : viewSizeNorm.x) * min, tmpPos + (m_vertical ? viewSizeNorm.y : viewSizeNorm.x) * max))
         {
-            tmpPos = Mathf.Clamp01((timebarPos +
-                Mathf.Lerp(0, m_vertical ? viewSizeNorm.y : viewSizeNorm.x, timebarPos)) -
+            tmpPos = Mathf.Clamp01(((float)timebarPos +
+                Mathf.Lerp(0, m_vertical ? viewSizeNorm.y : viewSizeNorm.x, (float)timebarPos)) -
                 (m_vertical ? viewSizeNorm.y : viewSizeNorm.x) * fallowPoint);
         }
 
@@ -131,7 +131,7 @@ public class SeekBar : MonoBehaviour
 
     }
 
-    public void SetLocation(float time, bool fallow = false, bool snap = false)
+    public void SetLocation(double time, bool fallow = false, bool snap = false)
     {
         if(!mapEditManager.timelineImageCreator) throw new NullReferenceException("Timeline Creater was not set");
         if(!m_seekBarTrans) throw new NullReferenceException("Time Bar was not set");
@@ -143,18 +143,20 @@ public class SeekBar : MonoBehaviour
 
 
             tempo.bpm *= timeSig.note / 4f;//adjust tempo to fit the beat divisions of the time signature
-
+            time = (int)(time * 1000);
             // var offset = (tempo.bpm.spb * .5f);
-            var beat = tempo.GetNextBeat(time);
-            time = (beat - time < time - beat - tempo.bpm.spb ? beat : (beat - (float)tempo.bpm.spb));
+            var beat = tempo.GetNextBeatMilli((int)time);
+            time = (beat - time < time - beat - tempo.bpm.mspb ? beat : (beat - tempo.bpm.mspb));
+
+            time /= 1000;
         }
 
         var source = mapEditManager.AudioSource;
         var clip = source.clip;
-        var timebarPos = time / clip.length;
+        var timebarPos = (time) / clip.AccurateLength();
 
         var rect = GetComponent<RectTransform>().rect;
-        var pos = Vector2.Lerp(rect.min, rect.max, timebarPos);
+        var pos = Vector2.Lerp(rect.min, rect.max, (float)timebarPos);
 
         m_seekBarTrans.localPosition = new Vector2(
             m_vertical ? m_seekBarTrans.localPosition.x : pos.x,

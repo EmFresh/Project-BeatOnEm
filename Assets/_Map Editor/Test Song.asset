@@ -12,8 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c7f4b2e1a4b86e43bd8a282a68fcc2c, type: 3}
   m_Name: Test Song
   m_EditorClassIdentifier: 
-  enemyPrefabs: []
-  notePrefabs: []
+  enemyPrefabs:
+  - {fileID: 3540646333975573228, guid: eab2784ca193ae64e9e726eebc3ab5c6, type: 3}
+  - {fileID: 3540646333975573228, guid: eab2784ca193ae64e9e726eebc3ab5c6, type: 3}
+  - {fileID: 3540646333975573228, guid: eab2784ca193ae64e9e726eebc3ab5c6, type: 3}
+  notePrefabs:
+  - {fileID: 5423226073453278434, guid: fb677739e9a06d6469e9b276018812a4, type: 3}
+  - {fileID: 5423226073453278434, guid: fb677739e9a06d6469e9b276018812a4, type: 3}
+  - {fileID: 5423226073453278434, guid: fb677739e9a06d6469e9b276018812a4, type: 3}
   hitLocationsList:
   - points:
     - {x: -0.5, y: 1, z: 0}
@@ -23,7 +29,7 @@ MonoBehaviour:
     - {x: 1, y: 0, z: 0}
     - {x: -0.5, y: -1, z: 0}
     - {x: 0.5, y: -1, z: 0}
-    offsetPos: {x: 0, y: 0, z: 0}
+    offsetPos: {x: 0, y: 0, z: 1}
     offsetScale: {x: 1, y: 1, z: 1}
   - points:
     - {x: -0.5, y: 1, z: 0}
@@ -32,7 +38,7 @@ MonoBehaviour:
     - {x: 1, y: 0, z: 0}
     - {x: -0.5, y: -1, z: 0}
     - {x: 0.5, y: -1, z: 0}
-    offsetPos: {x: 0, y: 0, z: 0}
+    offsetPos: {x: 0, y: 0, z: 1}
     offsetScale: {x: 1, y: 1, z: 1}
   beats:
   - track: {fileID: 11400000}
@@ -49,15 +55,6 @@ MonoBehaviour:
     - hitLocation: 3
       hitTiming: 14.863636
       hitType: 0
-    - hitLocation: 4
-      hitTiming: 11.045454
-      hitType: 0
-    - hitLocation: 2
-      hitTiming: 11.045454
-      hitType: 0
-    - hitLocation: 3
-      hitTiming: 11.045454
-      hitType: 0
     hitLocationsIndex: 0
     laneIndex: 1
     startTime: 11.045454
@@ -67,10 +64,18 @@ MonoBehaviour:
   - track: {fileID: 11400000}
     noteDataList:
     - hitLocation: 3
-      hitTiming: 14.045454
+      hitTiming: 13.227272
       hitType: 0
+    hitLocationsIndex: 0
+    laneIndex: 2
+    startTime: 12.681818
+    endTime: 13.77273
+    SectionName: 
+    spawnLocation: {x: 0, y: 0, z: 0}
+  - track: {fileID: 11400000}
+    noteDataList:
     - hitLocation: 3
-      hitTiming: 12.954545
+      hitTiming: 14.045454
       hitType: 0
     hitLocationsIndex: 0
     laneIndex: 0
@@ -81,15 +86,43 @@ MonoBehaviour:
   - track: {fileID: 11400000}
     noteDataList:
     - hitLocation: 3
-      hitTiming: 13.227272
+      hitTiming: 16.772727272727273
+      hitType: 0
+    - hitLocation: 2
+      hitTiming: 17.045454545454543
+      hitType: 0
+    - hitLocation: 4
+      hitTiming: 17.318181818181817
       hitType: 0
     - hitLocation: 3
-      hitTiming: 12.681818
+      hitTiming: 19.227272727272727
+      hitType: 0
+    hitLocationsIndex: 0
+    laneIndex: 1
+    startTime: 15.409090909090908
+    endTime: 19.772727966308594
+    SectionName: 
+    spawnLocation: {x: 0, y: 0, z: 0}
+  - track: {fileID: 11400000}
+    noteDataList:
+    - hitLocation: 3
+      hitTiming: 17.59090909090909
+      hitType: 0
+    hitLocationsIndex: 0
+    laneIndex: 0
+    startTime: 17.045454545454543
+    endTime: 18.136363983154297
+    SectionName: 
+    spawnLocation: {x: 0, y: 0, z: 0}
+  - track: {fileID: 11400000}
+    noteDataList:
+    - hitLocation: 3
+      hitTiming: 18.409090909090907
       hitType: 0
     hitLocationsIndex: 0
     laneIndex: 2
-    startTime: 12.681818
-    endTime: 13.77273
+    startTime: 17.318181818181817
+    endTime: 18.954545974731445
     SectionName: 
     spawnLocation: {x: 0, y: 0, z: 0}
   tempoMap:

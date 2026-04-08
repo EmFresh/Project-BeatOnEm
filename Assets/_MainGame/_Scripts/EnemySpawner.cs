@@ -7,7 +7,7 @@ using UnityEngine.TextCore.Text;
 
 public class EnemySpawner : MonoBehaviour
 {
-    public SongTrack track;
+    [SerializeField]SongManager songManager;
     public Transform parentObj;
     public List<LanePoint> lanePoint;
     public float reactTime = 2.1f;
@@ -17,13 +17,13 @@ public class EnemySpawner : MonoBehaviour
 
     private void Awake()
     {
-        var check = clip?.isPlaying ?? false;
+        var check = songManager.AudioSource?.isPlaying ?? false;
         mapMover = FindFirstObjectByType<WorldControl>();
 
         if(check)
-            clip?.Pause();
+            songManager.AudioSource?.Pause();
         if(check)
-            clip?.Play();
+            songManager.AudioSource?.Play();
 
 
         last = 0;
@@ -31,15 +31,15 @@ public class EnemySpawner : MonoBehaviour
 
     int last = 0, texNum = 0;
     bool init = true;
-    List<(float, BeatData)> timings = new List<(float, BeatData)>();
+    List<(double, BeatData)> timings = new List<(double, BeatData)>();
     private void SpawnUpdate()
     {
-        if(!track) return;
+        if(!songManager.MapTrack) return;
 
         if(init)
         {
-            track.beats.Sort((a, b) => { return a?.spawnTime.CompareTo(b?.spawnTime) ?? 1; });
-            foreach(var beat in track.beats)
+            songManager.MapTrack.beats.Sort((a, b) => { return a?.spawnTime.CompareTo(b?.spawnTime) ?? 1; });
+            foreach(var beat in songManager.MapTrack.beats)
                 if((beat?.spawnTime ?? float.PositiveInfinity) != float.PositiveInfinity)
                     timings.Add((beat.startTime, beat));
 
@@ -49,7 +49,7 @@ public class EnemySpawner : MonoBehaviour
         GameObject createEnemy(int index)
         {
             GameObject obj = null;
-            obj = Instantiate(track.enemyPrefabs[index], parentObj);
+            obj = Instantiate(songManager.MapTrack.enemyPrefabs[index], parentObj);
             obj.transform.localPosition = new(-1.15f + 1.15f * index, 0, 5/*start location*/ + reactTime * (mapMover.speed));
             obj.transform.localRotation *= Quaternion.Euler(0, 180, 0);
             return obj;
@@ -61,11 +61,11 @@ public class EnemySpawner : MonoBehaviour
 
             //if((time?.Item2 ?? null) == null) continue;
 
-            if(clip.time - time.Item1 >= reactTime) // top bound for enemy
+            if(songManager.AudioSource.AccurateTime() - time.Item1 >= reactTime) // top bound for enemy
                 break;
 
 
-            if(clip.time - time.Item1 >= -reactTime) // within bound
+            if(songManager.AudioSource.AccurateTime() - time.Item1 >= -reactTime) // within bound
             {
                 //	print("created Object!!");
 
@@ -83,16 +83,16 @@ public class EnemySpawner : MonoBehaviour
 
                 var ctrl = obj.AddComponent<EnemyControl>();
                 float quarterTimeBias = 0.05f;//a short time before the notes get to the enemy
-                ctrl.Init(mapMover, lanePoint[time.Item2.laneIndex % 3], clip, Mathf.Min(clip.time, time.Item1) + .05f, time.Item1 - quarterTimeBias);
+                ctrl.Init(mapMover, lanePoint[time.Item2.laneIndex % 3], songManager.AudioSource, Math.Min(songManager.AudioSource.AccurateTime(), time.Item1) + .05f, time.Item1 - quarterTimeBias);
 
                 var act = obj.AddComponent<EnemyActions>();
 
 
-                act.points = track.hitLocationsList[time.Item2.hitLocationsIndex];
+                act.points = songManager.MapTrack.hitLocationsList[time.Item2.hitLocationsIndex];
                 act.noteData = time.Item2.noteDataList;
                 act.hitWindow = reactTime * .33f;
-                act.hitModel = track.notePrefabs[0];
-                act.clip = clip;
+                act.hitModel = songManager.MapTrack.notePrefabs[0];
+                act.clip = songManager.AudioSource;
 
 
                 foreach(var phantomObj in act?.points?.points)
@@ -108,8 +108,7 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
-    //DateTime timer = DateTime.MinValue;
-    public AudioSource clip = null;
+    //DateTime timer = DateTime.MinValue; 
     void Update()
     {
         //if(!clip?.isPlaying ?? false)

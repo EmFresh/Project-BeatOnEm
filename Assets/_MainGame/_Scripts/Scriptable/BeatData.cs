@@ -44,7 +44,7 @@ public struct NoteData
     /// <summary>
     /// the timing of each hit location
     /// </summary>
-    public float hitTiming;
+    public double hitTiming;
 
     /// <summary>
     /// how the target should be hit (will make it a single value later)
@@ -66,9 +66,9 @@ public class BeatData
     public int hitLocationsIndex = -1; //locations where you can hit the enemies
 
     public int laneIndex = -1;
-    public float startTime = 0, endTime = 0;
+    public double startTime = 0, endTime = 0;
 
-    public void AddNote(float hitTiming, int hitLocation, HitType hitType, float timePad = 0)
+    public void AddNote(double hitTiming, int hitLocation, HitType hitType, float timePad = 0)
     {
         if(noteDataList.Any((note) =>
          InRange(hitTiming, note.hitTiming - timePad, note.hitTiming + timePad) &&
@@ -78,19 +78,19 @@ public class BeatData
         noteDataList.Add(new NoteData() { hitLocation = hitLocation, hitTiming = hitTiming, hitType = hitType });
     }
 
-    public void RemoveNote(float hitTiming, int hitLocation, HitType hitType, float timePad = 0)
+    public void RemoveNote(double hitTiming, int hitLocation, HitType hitType, float timePad = 0)
     {
         noteDataList.RemoveAll((note) => InRange(hitTiming, note.hitTiming - timePad, note.hitTiming + timePad) && note.hitLocation == hitLocation && note.hitType == hitType);
     }
 
-    public NoteData GetNote(float hitTiming, float TimePad = 0, int hitLocation = -1, HitType hitType = (HitType)(-1)) =>
+    public NoteData GetNote(double hitTiming, float TimePad = 0, int hitLocation = -1, HitType hitType = (HitType)(-1)) =>
         noteDataList.FirstOrDefault((note) =>
         InRange(hitTiming, note.hitTiming - TimePad, note.hitTiming + TimePad) &&
         note.hitLocation == (hitLocation == -1 ? note.hitLocation : hitLocation) &&
         note.hitType == (hitType == (hitType) - 1 ? note.hitType : hitType));
 
 
-    public List<NoteData> GetNotes(float hitTiming, float timePad) =>
+    public List<NoteData> GetNotes(double hitTiming, float timePad) =>
          noteDataList?.Where((note) => InRange(hitTiming, note.hitTiming - timePad, note.hitTiming + timePad))?.ToList() ?? new List<NoteData>();
 
     public BeatData Clone() => new BeatData()
@@ -106,7 +106,7 @@ public class BeatData
         track = track,
     };
 
-    bool InRange(float val, float min, float max) => val >= min && val <= max;
+    bool InRange(double val, double min, double max) => val >= min && val <= max;
 
 
     //spawn stuff
@@ -125,11 +125,11 @@ public class BeatData
     /// <summary>
     /// the spawn time based on the first enemy hitTiming 
     /// </summary>
-    public float spawnTime
+    public double spawnTime
     {
         set => _spawnTimeOffset = value;
-        get => ((float)startTime) - Mathf.Abs(_spawnTimeOffset);
+        get => (startTime) - Math.Abs(_spawnTimeOffset);
     }
-    private float _spawnTimeOffset = 2.5f;
+    private double _spawnTimeOffset = 2.5d;
 }
 

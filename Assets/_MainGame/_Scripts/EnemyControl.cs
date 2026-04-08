@@ -6,8 +6,8 @@ public class EnemyControl : MonoBehaviour
     LanePoint lanePoint;
     AudioSource AudioSource;
     Vector3 startPosition;
-    float startTime,endTime;
-    public void Init(WorldControl world, LanePoint lane, AudioSource audio, float start, float end)
+    double startTime, endTime;
+    public void Init(WorldControl world, LanePoint lane, AudioSource audio, double start, double end)
     {
         startPosition = transform.position;
         worldControl = world;
@@ -20,6 +20,6 @@ public class EnemyControl : MonoBehaviour
 
     private void Update()
     {
-        transform.position = Vector3.Lerp(startPosition, lanePoint.transform.position  , (AudioSource.time - startTime) / (endTime - startTime));
+        transform.position = Vector3.Lerp(startPosition, lanePoint.transform.position, (float)((AudioSource.time - startTime) / (endTime - startTime)));
     }
 }

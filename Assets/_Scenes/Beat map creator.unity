@@ -6096,11 +6096,11 @@ RectTransform:
   - {fileID: 1838424583}
   m_Father: {fileID: 1442808636}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 365, y: -61.6}
-  m_SizeDelta: {x: 236.83, y: 100}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 1, y: 0.5}
+  m_AnchorMax: {x: 1, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 315, y: 130}
+  m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &1254878413
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6118,8 +6118,8 @@ MonoBehaviour:
     m_Right: 0
     m_Top: 0
     m_Bottom: 0
-  m_ChildAlignment: 0
-  m_Spacing: 9.3
+  m_ChildAlignment: 3
+  m_Spacing: 0
   m_ChildForceExpandWidth: 1
   m_ChildForceExpandHeight: 1
   m_ChildControlWidth: 0
@@ -8784,7 +8784,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 512, y: 469}
-  m_SizeDelta: {x: 243.73, y: 128.1}
+  m_SizeDelta: {x: 250, y: 130}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1442808637
 MonoBehaviour:
@@ -8833,7 +8833,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 56.5
+  m_fontSize: 57.3
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -10216,7 +10216,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 315, y: 100}
+  m_SizeDelta: {x: 315, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1838424584
 MonoBehaviour:
@@ -11008,9 +11008,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 77c9332925f856444a89aa965e3206e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BeatMapCounter
-  tickSound: {fileID: 0}
-  tockSound: {fileID: 0}
-  manager: {fileID: 2045049470}
+  tickSound: {fileID: 8300000, guid: 96d44c236fa8b934f8fa7a844a14fca3, type: 3}
+  tockSound: {fileID: 8300000, guid: 9624151742d9b7249b89f627e64209e2, type: 3}
+  editManager: {fileID: 2045049470}
+  songManager: {fileID: 0}
+  source: {fileID: 2045049472}
+  audioOffsetMilli: 0
 --- !u!82 &2045049472
 AudioSource:
   m_ObjectHideFlags: 0

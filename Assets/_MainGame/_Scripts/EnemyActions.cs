@@ -112,7 +112,7 @@ public class EnemyActions : MonoBehaviour
             StartCoroutine(OnEnemyEnd(hitWindow * 3f));
     }
 
-    IEnumerator AnimateMeleeTarget(float timing, float window, HitLocations points, int location)
+    IEnumerator AnimateMeleeTarget(double timing, float window, HitLocations points, int location)
     {
         var obj = points.CreateHitpointObject(hitModel, location, this.transform);
         obj.transform.localScale = Vector3.one*1.8f ;
@@ -140,9 +140,9 @@ public class EnemyActions : MonoBehaviour
             obj.GetComponentInChildren<Renderer>().material.color =
             Color.Lerp(Color.red, Color.green,
             Mathf.Clamp((i =
-            Mathf.InverseLerp(clip.time < timing ?
-            timing - (window * .5f) : timing + (window * .5f),
-            timing, clip.time)) * i, 0, 1));//testing
+            Mathf.InverseLerp((float)(clip.time < timing ?
+            timing - (window * .5f) : timing + (window * .5f)),
+            (float)timing, clip.time)) * i, 0, 1));//testing
 
             for(int a = 0; a < obj.transform.childCount; ++a)
                 obj.transform.GetChild(a).localScale
