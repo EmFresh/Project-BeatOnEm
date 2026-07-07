@@ -19,7 +19,7 @@
                     "name": "Seek Enhance",
                     "type": "Value",
                     "id": "ea4ebe5c-df89-4e62-9630-d699616db8aa",
-                    "expectedControlType": "",
+                    "expectedControlType": "Double",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
@@ -37,6 +37,15 @@
                     "name": "Redo",
                     "type": "Button",
                     "id": "99ac1402-3ccc-4164-bbe3-83d5e747004c",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Save",
+                    "type": "Button",
+                    "id": "4758d6d6-8091-4700-809d-a589b7ff9d84",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -153,6 +162,17 @@
                     "action": "Redo",
                     "isComposite": false,
                     "isPartOfComposite": true
+                },
+                {
+                    "name": "",
+                    "id": "2f7f7691-aec0-43e1-9c2b-d73c3ededb5c",
+                    "path": "<Keyboard>/s",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Save",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         },

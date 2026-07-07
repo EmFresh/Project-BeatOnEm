@@ -3,13 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-using Unity.AppUI.UI;
-
-using UnityEditor.Experimental.GraphView;
+using MessagePack;
 
 using UnityEngine;
-
-using static Unity.Burst.Intrinsics.X86.Avx;
 
 public static class AudioExtentions
 {
@@ -28,7 +24,8 @@ public static class AudioExtentions
 }
 
 [Serializable]
-public class BPM
+[MessagePackObject(true, AllowPrivate = true)]
+public partial class BPM
 {
     public BPM(float bpm = 60) => this.bpm = bpm;
 
@@ -41,6 +38,7 @@ public class BPM
     //1/60 = 0.0166667f
 
     //seconds per beat
+    [IgnoreMember]
     public double spb
     {
         get
@@ -55,17 +53,20 @@ public class BPM
     }
 
     //milliseconds per beat
+    [IgnoreMember]
     public int mspb
     {
         get => (int)(spb * 1000);
     }
 
-
+    [IgnoreMember]
     double _divider = 0;
+    [IgnoreMember]
     float _bpm = 0;
 }
 
 [Serializable]
+[MessagePackObject(true, AllowPrivate = true)]
 public class Tempo
 {
     //beats per min 
@@ -74,6 +75,7 @@ public class Tempo
 
     //song time stamp
     public double timing = 0;
+    [IgnoreMember]
     public int TimingMilli { get => (int)(timing * 1000); set => timing = value / 1000; }
 
 
@@ -83,19 +85,18 @@ public class Tempo
         var amount = (int)Math.Floor(currentTime / bpm.spb);
         var val = ((amount + 1) * bpm.spb) + timing;
         var check = ((val) == (noteTime));//needed
-        val = check ? (((amount + 2) * bpm.spb) + timing) : val;
 
-        return val;
+        return check ? (((amount + 2) * bpm.spb) + timing) : val;
     }
     public int GetNextBeatMilli(int noteTimeMilli)
     {
         var currentTime = noteTimeMilli - TimingMilli;
         var amount = (currentTime / (bpm.mspb));
-        var val = ((amount + 1) * (int)(bpm.mspb)) + TimingMilli;
-        var check = ((val / (bpm.mspb)) == (noteTimeMilli / (bpm.mspb)));//needed
-        val = check ? (((amount + 2) * (int)(bpm.mspb)) + TimingMilli) : val;
 
-        return val;
+        var val = ((amount + 1) * (int)(bpm.mspb)) + TimingMilli;
+        var check = ((val) == (noteTimeMilli));//needed
+
+        return check ? (((amount + 2) * (int)(bpm.mspb)) + TimingMilli) : val;
     }
 
     public override string ToString()
@@ -105,11 +106,12 @@ public class Tempo
             $"timing:{timing}";
     }
 
-    public Tempo Clone() => new Tempo() { bpm = bpm, timing = timing };
+    public Tempo Clone() => new Tempo() { bpm = bpm.bpm, timing = timing };
 
 }
 
 [Serializable]
+[MessagePackObject(true, AllowPrivate = true)]
 public class TimeSig
 {
     //numerator
@@ -118,6 +120,7 @@ public class TimeSig
     public int note;
     //where in the song ?
     public double timing;
+    [IgnoreMember]
     public int TimingMilli { get => (int)(timing * 1000); set => timing = value / 1000; }
 
     public static TimeSig HalfTime { get => new TimeSig() { beats = 2, note = 4, timing = 0 }; }
@@ -126,21 +129,26 @@ public class TimeSig
 
     public int GetNextBeat(double noteTime, Tempo tempo)
     {
-        var currentTime = noteTime - timing;
+        var currentTime = noteTime - tempo.timing;
         var amount = (int)Math.Floor(currentTime / tempo.bpm.spb);
         var beatsCalc = beats * (note / 4f);
-        var check = ((amount + 1) * tempo.bpm.spb > noteTime);
-        return Mathf.FloorToInt((check ? (amount + 1) : (amount + 2)) % beatsCalc);
+
+        var val = ((amount + 1) * tempo.bpm.spb) + tempo.timing;
+        var check = (val == noteTime);
+
+        return Mathf.FloorToInt((check ? (amount + 2) : (amount + 1)) % beatsCalc);
 
     }
     public int GetNextBeatMilli(int noteTimeMilli, Tempo tempo)
     {
-        var currentTime = noteTimeMilli - TimingMilli;
-        var amount = (int)Math.Floor(currentTime / (tempo.bpm.spb * 1000));
+        var currentTime = noteTimeMilli - tempo.TimingMilli;
+        var amount = (int)Math.Floor((double)currentTime / (tempo.bpm.mspb));
         var beatsCalc = beats * (note / 4f);
-        var check = ((amount + 1) * (tempo.bpm.spb * 1000) > noteTimeMilli);
-        return Mathf.FloorToInt((check ? (amount + 1) : (amount + 2)) % beatsCalc);
 
+        var val = ((amount + 1) * tempo.bpm.mspb) + tempo.TimingMilli;
+        var check = (val == noteTimeMilli);
+
+        return Mathf.FloorToInt((check ? (amount + 2) : (amount + 1)) % beatsCalc);
     }
 
     public override string ToString()
@@ -155,6 +163,7 @@ public class TimeSig
 }
 
 [Serializable]
+[MessagePackObject(true, AllowPrivate = true)]
 public class TempoMap
 {
     public List<Tempo> tempos;
@@ -195,7 +204,7 @@ public class TempoMap
     public void RemoveTempo(Tempo tempo)
     {
         tempos.Remove(tempo);
-        Sort();
+        Init();
     }
 
     public void AddTimeSig(int beats, int note, double timing) =>
@@ -210,7 +219,7 @@ public class TempoMap
     public void RemoveTimeSig(TimeSig tempo)
     {
         timeSigs.Remove(tempo);
-        Sort();
+        Init();
     }
 
     public Tempo GetTempo(double noteTime)
@@ -218,7 +227,7 @@ public class TempoMap
         if(tempos.Count == 0) return null;
 
         try { return tempos.Last(t => t.timing <= noteTime); }
-        catch { return tempos.First(); }
+        catch { return tempos[0]; }
     }
 
     public TimeSig GetTimeSig(double noteTime)
@@ -226,7 +235,7 @@ public class TempoMap
         if(timeSigs.Count == 0) return null;
 
         try { return timeSigs.Last(t => t.timing <= noteTime); }
-        catch { return timeSigs.First(); }
+        catch { return timeSigs[0]; }
 
     }
 
@@ -235,4 +244,12 @@ public class TempoMap
         tempos.Clear();
         timeSigs.Clear();
     }
+    public TempoMap Clone() =>
+        new TempoMap()
+        {
+            tempos = tempos.Select(t => t?.Clone()).ToList(),
+            timeSigs = timeSigs.Select(t => t?.Clone()).ToList()
+        };
+
+
 }

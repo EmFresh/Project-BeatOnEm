@@ -12,6 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c7f4b2e1a4b86e43bd8a282a68fcc2c, type: 3}
   m_Name: Test Song
   m_EditorClassIdentifier: 
+  songName: Numb
+  artist: Linkin Park
+  mapper: EmFresh
   enemyPrefabs:
   - {fileID: 3540646333975573228, guid: eab2784ca193ae64e9e726eebc3ab5c6, type: 3}
   - {fileID: 3540646333975573228, guid: eab2784ca193ae64e9e726eebc3ab5c6, type: 3}
@@ -29,8 +32,8 @@ MonoBehaviour:
     - {x: 1, y: 0, z: 0}
     - {x: -0.5, y: -1, z: 0}
     - {x: 0.5, y: -1, z: 0}
-    offsetPos: {x: 0, y: 0, z: 1}
-    offsetScale: {x: 1, y: 1, z: 1}
+    offsetPos: {x: 0, y: 0.29, z: 1}
+    offsetScale: {x: 0.5, y: 0.5, z: 1}
   - points:
     - {x: -0.5, y: 1, z: 0}
     - {x: 0.5, y: 1, z: 0}
@@ -41,8 +44,7 @@ MonoBehaviour:
     offsetPos: {x: 0, y: 0, z: 1}
     offsetScale: {x: 1, y: 1, z: 1}
   beats:
-  - track: {fileID: 11400000}
-    noteDataList:
+  - noteDataList:
     - hitLocation: 4
       hitTiming: 12.409091
       hitType: 0
@@ -57,34 +59,34 @@ MonoBehaviour:
       hitType: 0
     hitLocationsIndex: 0
     laneIndex: 1
+    enemyIndex: -1
     startTime: 11.045454
     endTime: 15.40909
     SectionName: 
     spawnLocation: {x: 0, y: 0, z: 0}
-  - track: {fileID: 11400000}
-    noteDataList:
+  - noteDataList:
     - hitLocation: 3
       hitTiming: 13.227272
       hitType: 0
     hitLocationsIndex: 0
     laneIndex: 2
+    enemyIndex: -1
     startTime: 12.681818
     endTime: 13.77273
     SectionName: 
     spawnLocation: {x: 0, y: 0, z: 0}
-  - track: {fileID: 11400000}
-    noteDataList:
+  - noteDataList:
     - hitLocation: 3
       hitTiming: 14.045454
       hitType: 0
     hitLocationsIndex: 0
     laneIndex: 0
+    enemyIndex: -1
     startTime: 12.954545
     endTime: 14.59091
     SectionName: 
     spawnLocation: {x: 0, y: 0, z: 0}
-  - track: {fileID: 11400000}
-    noteDataList:
+  - noteDataList:
     - hitLocation: 3
       hitTiming: 16.772727272727273
       hitType: 0
@@ -99,40 +101,238 @@ MonoBehaviour:
       hitType: 0
     hitLocationsIndex: 0
     laneIndex: 1
+    enemyIndex: -1
     startTime: 15.409090909090908
     endTime: 19.772727966308594
     SectionName: 
     spawnLocation: {x: 0, y: 0, z: 0}
-  - track: {fileID: 11400000}
-    noteDataList:
+  - noteDataList:
     - hitLocation: 3
       hitTiming: 17.59090909090909
       hitType: 0
     hitLocationsIndex: 0
     laneIndex: 0
+    enemyIndex: -1
     startTime: 17.045454545454543
     endTime: 18.136363983154297
     SectionName: 
     spawnLocation: {x: 0, y: 0, z: 0}
-  - track: {fileID: 11400000}
-    noteDataList:
+  - noteDataList:
     - hitLocation: 3
       hitTiming: 18.409090909090907
       hitType: 0
     hitLocationsIndex: 0
     laneIndex: 2
+    enemyIndex: -1
     startTime: 17.318181818181817
     endTime: 18.954545974731445
+    SectionName: 
+    spawnLocation: {x: 0, y: 0, z: 0}
+  - noteDataList:
+    - hitLocation: 3
+      hitTiming: 20.94
+      hitType: 0
+    - hitLocation: 2
+      hitTiming: 21.213
+      hitType: 0
+    - hitLocation: 4
+      hitTiming: 21.486
+      hitType: 0
+    - hitLocation: 1
+      hitTiming: 21.759
+      hitType: 0
+    hitLocationsIndex: 0
+    laneIndex: 1
+    enemyIndex: -1
+    startTime: 20.121
+    endTime: 21.759000778198242
+    SectionName: 
+    spawnLocation: {x: 0, y: 0, z: 0}
+  - noteDataList:
+    - hitLocation: 0
+      hitTiming: 22.305
+      hitType: 0
+    - hitLocation: 1
+      hitTiming: 22.578
+      hitType: 0
+    - hitLocation: 0
+      hitTiming: 22.851
+      hitType: 0
+    - hitLocation: 3
+      hitTiming: 23.124
+      hitType: 0
+    - hitLocation: 2
+      hitTiming: 23.397
+      hitType: 0
+    - hitLocation: 4
+      hitTiming: 23.67
+      hitType: 0
+    - hitLocation: 5
+      hitTiming: 24.216
+      hitType: 0
+    - hitLocation: 6
+      hitTiming: 24.489
+      hitType: 0
+    - hitLocation: 5
+      hitTiming: 24.762
+      hitType: 0
+    hitLocationsIndex: 0
+    laneIndex: 1
+    enemyIndex: -1
+    startTime: 22.032
+    endTime: 24.761999130249023
+    SectionName: 
+    spawnLocation: {x: 0, y: 0, z: 0}
+  - noteDataList:
+    - hitLocation: 2
+      hitTiming: 26.127
+      hitType: 0
+    - hitLocation: 3
+      hitTiming: 26.4
+      hitType: 0
+    - hitLocation: 0
+      hitTiming: 26.673
+      hitType: 0
+    - hitLocation: 4
+      hitTiming: 26.946
+      hitType: 0
+    - hitLocation: 1
+      hitTiming: 27.492
+      hitType: 0
+    hitLocationsIndex: 0
+    laneIndex: 0
+    enemyIndex: -1
+    startTime: 24.762
+    endTime: 27.492000579833984
+    SectionName: 
+    spawnLocation: {x: 0, y: 0, z: 0}
+  - noteDataList:
+    - hitLocation: 3
+      hitTiming: 28.038
+      hitType: 0
+    - hitLocation: 5
+      hitTiming: 28.311
+      hitType: 0
+    - hitLocation: 6
+      hitTiming: 28.584
+      hitType: 0
+    - hitLocation: 5
+      hitTiming: 28.857
+      hitType: 0
+    - hitLocation: 3
+      hitTiming: 29.13
+      hitType: 0
+    - hitLocation: 0
+      hitTiming: 29.676
+      hitType: 0
+    hitLocationsIndex: 0
+    laneIndex: 2
+    enemyIndex: -1
+    startTime: 27.492
+    endTime: 29.676000595092773
+    SectionName: 
+    spawnLocation: {x: 0, y: 0, z: 0}
+  - noteDataList:
+    - hitLocation: 0
+      hitTiming: 31.041
+      hitType: 0
+    - hitLocation: 6
+      hitTiming: 31.314
+      hitType: 0
+    - hitLocation: 2
+      hitTiming: 31.587
+      hitType: 0
+    - hitLocation: 1
+      hitTiming: 31.86
+      hitType: 0
+    - hitLocation: 4
+      hitTiming: 32.133
+      hitType: 0
+    - hitLocation: 5
+      hitTiming: 32.406
+      hitType: 0
+    - hitLocation: 3
+      hitTiming: 32.952
+      hitType: 0
+    - hitLocation: 1
+      hitTiming: 33.225
+      hitType: 0
+    - hitLocation: 0
+      hitTiming: 33.498
+      hitType: 0
+    hitLocationsIndex: 0
+    laneIndex: 1
+    enemyIndex: -1
+    startTime: 30.495
+    endTime: 33.49800109863281
+    SectionName: 
+    spawnLocation: {x: 0, y: 0, z: 0}
+  - noteDataList:
+    - hitLocation: 3
+      hitTiming: 34.59
+      hitType: 0
+    - hitLocation: 4
+      hitTiming: 34.863
+      hitType: 0
+    - hitLocation: 3
+      hitTiming: 35.136
+      hitType: 0
+    - hitLocation: 6
+      hitTiming: 35.409
+      hitType: 0
+    - hitLocation: 5
+      hitTiming: 35.682
+      hitType: 0
+    - hitLocation: 3
+      hitTiming: 36.228
+      hitType: 0
+    hitLocationsIndex: 0
+    laneIndex: 0
+    enemyIndex: -1
+    startTime: 33.498
+    endTime: 36.22800064086914
+    SectionName: 
+    spawnLocation: {x: 0, y: 0, z: 0}
+  - noteDataList:
+    - hitLocation: 3
+      hitTiming: 36.774
+      hitType: 0
+    - hitLocation: 5
+      hitTiming: 37.047
+      hitType: 0
+    - hitLocation: 6
+      hitTiming: 37.32
+      hitType: 0
+    - hitLocation: 3
+      hitTiming: 37.866
+      hitType: 0
+    - hitLocation: 0
+      hitTiming: 38.958
+      hitType: 0
+    hitLocationsIndex: 0
+    laneIndex: 2
+    enemyIndex: -1
+    startTime: 35.682
+    endTime: 38.95800018310547
+    SectionName: 
+    spawnLocation: {x: 0, y: 0, z: 0}
+  - noteDataList:
+    - hitLocation: 1
+      hitTiming: 38.412
+      hitType: 0
+    hitLocationsIndex: 0
+    laneIndex: 1
+    enemyIndex: -1
+    startTime: 37.593
+    endTime: 38.4119987487793
     SectionName: 
     spawnLocation: {x: 0, y: 0, z: 0}
   tempoMap:
     tempos:
     - bpm:
-        bpm: 110
-        diviser: 0.009090909
-        _bpm: 110
-      timing: 4.5
+        bpm: 109.5
+      timing: 13.023059108582855
     timeSigs:
     - beats: 4
       note: 8
-      timing: 4.5
+      timing: 4.493082706411612

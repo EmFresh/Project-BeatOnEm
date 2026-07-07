@@ -5,6 +5,7 @@ using System.Linq;
 
 using UnityEngine;
 using UnityEngine.Events;
+
 using Unity.Mathematics;
 /*
 loot boxes
@@ -14,46 +15,46 @@ last hit cyoty time
 
 public class EnemyActions : MonoBehaviour
 {
+    public SongManager SongManager;
     public List<NoteData> noteData;
     public GameObject hitModel;
     // public Transform root;
     public float hitWindow = 2.1f;
-    private static List<EnemyActions> allActions = new List<EnemyActions>();
-    public  HitLocations points = new HitLocations();
+    private static List<EnemyActions> AllActionsList { get; } = new List<EnemyActions>();
+    public HitLocationVisualizer visualizer;
+
+    public static List<EnemyActions> GetAllActions() => AllActionsList;
 
     // Awake is called only once before Start
     void Awake()
     {
-        //Add any initial animation code here!!(NVM DONT DO THAT)
-        allActions.Add(this);
-
-
+        AllActionsList.Add(this);
     }
 
     private void OnDestroy()
     {
-        allActions.Remove(this);
+        AllActionsList.Remove(this);
     }
 
 
-    // * *
-    //* * *
-    // * *
+    // 0 1
+    //2 3 4
+    // 5 6
 
     private int last = 0;
     //public DateTime timer = DateTime.MinValue;
     public AudioSource clip;
     void NoteUpdate()
     {
-        var timings = noteData.Select(v=>v.hitTiming).ToList();
+        var timings = noteData.Select(v => v.hitTiming).ToList();
         var cTime = clip.time;
         if(timings == null) return;
 
 
-        if(last >= timings.Count()) return;
+        if(last >= timings.Count) return;
 
         bool check = false;
-        for(int count = last; count < timings.Count(); ++count)
+        for(int count = last; count < timings.Count; ++count)
         {
             var timing = timings[count];
 
@@ -66,32 +67,33 @@ public class EnemyActions : MonoBehaviour
             if(cTime - timing >= -hitWindow * 0.5f && cTime < timings[count])
             {
                 /*PLACE NOTE LOGIC HERE!!!*/
-                switch(noteData.ElementAt(count).hitType)
+                switch(noteData[count].hitType)
                 {
+                case HitType.NONE:
                 case HitType.TEST1://melee target
                     print("Test1 Triggered");
 
-                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, points, location: noteData.ElementAt(count).hitLocation));
+                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, visualizer, location: noteData[count].hitLocation));
                     //	StartCoroutine(AnimateMeleeTarget(time, time + reactTime, transform.localPosition));
 
                     break;
                 case HitType.TEST2://dodge target
                     print("Test2 Triggered");
-                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, points, location: noteData.ElementAt(count).hitLocation));
+                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, visualizer, location: noteData[count].hitLocation));
                     //  StartCoroutine(AnimateMeleeTarget(timing, hitWindow));
                     //	StartCoroutine(AnimateNote2(time, time + reactTime, transform.localPosition));
 
                     break;
                 case HitType.TEST3://dodge target
                     print("Test2 Triggered");
-                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, points, location: noteData.ElementAt(count).hitLocation));
+                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, visualizer, location: noteData[count].hitLocation));
                     //  StartCoroutine(AnimateMeleeTarget(timing, hitWindow));
                     //	StartCoroutine(AnimateNote3(time, time + reactTime, transform.localPosition));
 
                     break;
                 case HitType.TEST4://dodge target
                     print("Test2 Triggered");
-                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, points, location: noteData.ElementAt(count).hitLocation));
+                    StartCoroutine(AnimateMeleeTarget(timing, hitWindow, visualizer, location: noteData[count].hitLocation));
                     //  StartCoroutine(AnimateMeleeTarget(timing, hitWindow));
                     //	StartCoroutine(AnimateNote4(time, time + reactTime, transform.localPosition));
 
@@ -108,31 +110,29 @@ public class EnemyActions : MonoBehaviour
         if(!check)
             hitWindow = 0;
 
-        if(last >= timings.Count())//automatic cleanup
+        if(last >= timings.Count)//automatic cleanup
             StartCoroutine(OnEnemyEnd(hitWindow * 3f));
     }
 
-    IEnumerator AnimateMeleeTarget(double timing, float window, HitLocations points, int location)
+    IEnumerator AnimateMeleeTarget(double timing, float window, HitLocationVisualizer visualizer, int location)
     {
-        var obj = points.CreateHitpointObject(hitModel, location, this.transform);
-        obj.transform.localScale = Vector3.one*1.8f ;
+        var obj = Instantiate(visualizer.points[location], visualizer.parent ? visualizer.parent : visualizer.transform,false);
+        obj.transform.localScale = Vector3.one * 1.8f;
+        var rend = obj.GetComponentInChildren<Renderer>();
 
+        rend.material.color = Color.red;
 
-        //obj.transform.GetChild(0).localPosition += Vector3.zero;
-        obj.GetComponentInChildren<Renderer>().material.color = new Color(1, 0, 0);
         IEnumerator Cleanup()
         {
             yield return new WaitForSeconds(window);
             Destroy(obj);
         }
 
-        var callback = obj.AddComponent<HayYouSlappedSomthing>();
+        var callback = obj.AddComponent<HayYouSlappedSomething>();
 
         callback.onObjectHit.AddListener(() => { Destroy(obj); });
 
-        var targetScales = new List<Vector3>();
-        for(int a = 0; a < obj.transform.childCount; ++a)
-            targetScales.Add(obj.transform.GetChild(a).localScale);
+        var targetScales = new List<Vector3>() { obj.transform.localScale };
 
         yield return new WaitUntil(() =>
         {
@@ -142,11 +142,11 @@ public class EnemyActions : MonoBehaviour
             Mathf.Clamp((i =
             Mathf.InverseLerp((float)(clip.time < timing ?
             timing - (window * .5f) : timing + (window * .5f)),
-            (float)timing, clip.time)) * i, 0, 1));//testing
+            (float)timing, clip.time))*i , 0, 1));//testing
 
-            for(int a = 0; a < obj.transform.childCount; ++a)
-                obj.transform.GetChild(a).localScale
-                = Vector3.Lerp(targetScales[a], targetScales[a] * 0.7f, Mathf.Clamp(i * i, 0, 1));
+            // for(int a = 0; a < obj.transform.childCount; ++a)
+            obj.transform.localScale
+            = Vector3.Lerp(targetScales[0], targetScales[0] * 0.7f, Mathf.Clamp01(i * i));
 
 
             //Animation Logic Here!!

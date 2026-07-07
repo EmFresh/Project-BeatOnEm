@@ -1,8 +1,7 @@
 using System.Threading.Tasks;
 
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.InputSystem.Android;
+using UnityEngine.Events; 
 
 
 public class BeatMapCounter : MonoBehaviour
@@ -19,8 +18,7 @@ public class BeatMapCounter : MonoBehaviour
     [SerializeField] SongManager songManager;
     [SerializeField] AudioSource source;
 
-    public int audioOffsetMilli = 0;
-    Task infinite = null;
+    public int audioOffsetMilli = 0; 
     private async void Awake()
     {
         manager = editManager ? editManager : songManager ? songManager : null;

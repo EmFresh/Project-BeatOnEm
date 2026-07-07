@@ -4,10 +4,12 @@ using System.Collections.Generic;
 
 using UnityEngine;
 using UnityEngine.TextCore.Text;
+using UnityEngine.UI.Extensions;
 
 public class EnemySpawner : MonoBehaviour
 {
-    [SerializeField]SongManager songManager;
+    [SerializeField] SongManager songManager;
+    [SerializeField] string dataFile;
     public Transform parentObj;
     public List<LanePoint> lanePoint;
     public float reactTime = 2.1f;
@@ -17,8 +19,9 @@ public class EnemySpawner : MonoBehaviour
 
     private void Awake()
     {
+        songManager.MapTrack.Copy(((ISongManager)songManager).LoadFile(dataFile), excludePrefabs: true);
         var check = songManager.AudioSource?.isPlaying ?? false;
-        mapMover = FindFirstObjectByType<WorldControl>();
+        mapMover = FindAnyObjectByType<WorldControl>();
 
         if(check)
             songManager.AudioSource?.Pause();
@@ -48,8 +51,11 @@ public class EnemySpawner : MonoBehaviour
 
         GameObject createEnemy(int index)
         {
+            if(index < 0) index = 0;
+            if(index >= songManager.MapTrack.enemyPrefabs.Count) return null;
+
             GameObject obj = null;
-            obj = Instantiate(songManager.MapTrack.enemyPrefabs[index], parentObj);
+            obj = Instantiate(songManager.MapTrack.enemyPrefabs[index], parentObj, false);
             obj.transform.localPosition = new(-1.15f + 1.15f * index, 0, 5/*start location*/ + reactTime * (mapMover.speed));
             obj.transform.localRotation *= Quaternion.Euler(0, 180, 0);
             return obj;
@@ -75,33 +81,29 @@ public class EnemySpawner : MonoBehaviour
                 var notespace = parentObj.transform.GetChild(0).GetComponent<Collider>().bounds.extents.x / 2;
 
 
-                obj = createEnemy(time.Item2.laneIndex);
+                obj = createEnemy(time.Item2.enemyIndex);
 
 
                 if(obj == null) continue;
                 //	obj.transform.localPosition -= (Vector3)(Vector2)obj.GetComponentInChildren<MeshFilter>().mesh.bounds.min;
 
-                var ctrl = obj.AddComponent<EnemyControl>();
+                var ctrl = obj.GetOrAddComponent<EnemyControl>();
+
                 float quarterTimeBias = 0.05f;//a short time before the notes get to the enemy
-                ctrl.Init(mapMover, lanePoint[time.Item2.laneIndex % 3], songManager.AudioSource, Math.Min(songManager.AudioSource.AccurateTime(), time.Item1) + .05f, time.Item1 - quarterTimeBias);
+                ctrl.Init(mapMover, lanePoint[time.Item2.laneIndex], songManager.AudioSource, Math.Min(songManager.AudioSource.AccurateTime(), time.Item1) + .05f, time.Item1 - quarterTimeBias);
 
-                var act = obj.AddComponent<EnemyActions>();
+                var act = obj.GetOrAddComponent<EnemyActions>();
+                act.visualizer = obj.GetOrAddComponent<HitLocationVisualizer>();
 
+                act.visualizer.point = songManager.MapTrack.notePrefabs[0];
+                act.visualizer.hitLocations = songManager.MapTrack.hitLocationsList[time.Item2.hitLocationsIndex];
+                act.visualizer.SetColour3D(new Color(1, 1, 1, 0.2f));
 
-                act.points = songManager.MapTrack.hitLocationsList[time.Item2.hitLocationsIndex];
                 act.noteData = time.Item2.noteDataList;
                 act.hitWindow = reactTime * .33f;
-                act.hitModel = songManager.MapTrack.notePrefabs[0];
                 act.clip = songManager.AudioSource;
 
 
-                foreach(var phantomObj in act?.points?.points)
-                {
-                    var thing = act.points.CreateHitpointObject(act.hitModel, phantomObj, act.transform);
-
-                    thing.GetComponentInChildren<Renderer>().material.color =
-                        thing.GetComponentInChildren<Renderer>().material.color * new Color(1, 1, 1, 0.5f);
-                }
 
                 last = count + 1;
             }

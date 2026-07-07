@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+using MessagePack;
 
 using UnityEngine;
 
@@ -32,6 +32,7 @@ public enum HitType : int
 }
 
 [Serializable]
+[MessagePackObject(true, AllowPrivate = true)]
 public struct NoteData
 {
     //note stuff
@@ -56,16 +57,17 @@ public struct NoteData
 }
 
 [Serializable]
-public class BeatData
+[MessagePackObject(true, AllowPrivate = true)]
+public partial class BeatData
 {
-    public static bool pausing = false;
-    public static bool hallogram = false;
-    public SongTrack track = null;
+
+    //public SongTrack track = null;
 
     public List<NoteData> noteDataList = new List<NoteData>();
     public int hitLocationsIndex = -1; //locations where you can hit the enemies
 
     public int laneIndex = -1;
+    public int enemyIndex = -1;
     public double startTime = 0, endTime = 0;
 
     public void AddNote(double hitTiming, int hitLocation, HitType hitType, float timePad = 0)
@@ -103,7 +105,7 @@ public class BeatData
         SectionName = SectionName,
         spawnLocation = spawnLocation + Vector3.zero,
         _spawnTimeOffset = _spawnTimeOffset,
-        track = track,
+        //track = track,
     };
 
     bool InRange(double val, double min, double max) => val >= min && val <= max;
@@ -125,6 +127,7 @@ public class BeatData
     /// <summary>
     /// the spawn time based on the first enemy hitTiming 
     /// </summary>
+    [IgnoreMember]
     public double spawnTime
     {
         set => _spawnTimeOffset = value;

@@ -1,20 +1,99 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
-using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
+using MessagePack;
+using MessagePack.Resolvers;
+using MessagePack.Unity;
+
 using Newtonsoft.Json;
-using UnityEngine.InputSystem;
-using System.Collections;
+using Newtonsoft.Json.Linq;
+
+
+using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public interface ISongManager
 {
     public SongTrack MapTrack { get; }
     public AudioSource AudioSource { get; }
     public List<GameObject> Lanes { get; }
+
+    public void SaveFile(string path, MessagePackSerializerOptions MPOptions = null)
+    {
+        MPOptions ??=
+            new MessagePackSerializerOptions(
+                CompositeResolver.Create(
+                    UnityResolver.Instance,
+                    StandardResolver.Instance,
+                    BuiltinResolver.Instance,
+                    //default resolver
+                    ContractlessStandardResolver.Instance
+                )
+            );
+
+        try
+        {
+
+            var ser =
+                JToken.Parse(MessagePackSerializer.SerializeToJson(MapTrack, MPOptions)).ToString(Formatting.Indented);
+
+
+            //  ser = JsonUtility.ToJson(ser, true);
+
+            if(!Directory.Exists(Path.GetDirectoryName(path)))
+                Directory.CreateDirectory(Path.GetDirectoryName(path));
+            File.WriteAllText(path, ser);
+
+            //  print($"Saved file [{phase.ToString()}]");
+        }
+        catch(Exception e)
+        {
+            Debug.LogError($"{e}");
+        }
+        //  print(JsonUtility.ToJson(pile.ocupado,true));
+
+        // return true;
+    }
+
+    public SongTrack LoadFile(string path, MessagePackSerializerOptions MPOptions = null)
+    {
+        if(!File.Exists(path)) return null;
+
+        MPOptions ??=
+            new MessagePackSerializerOptions(
+                CompositeResolver.Create(
+                    UnityResolver.Instance,
+                    StandardResolver.Instance,
+                    BuiltinResolver.Instance,
+                    //default resolver
+                    ContractlessStandardResolver.Instance
+                )
+            );
+        try
+        {
+
+            var json = File.ReadAllText(path);
+            var track =
+            MessagePackSerializer.Deserialize<SongTrack>(
+                MessagePackSerializer.ConvertFromJson(json, MPOptions), MPOptions);
+
+            return track;
+            //JsonConvert.DeserializeObject<SongTrack>(json);      
+        }
+        catch(Exception e)
+        {
+            Debug.LogError($"{e}");
+        }
+
+        return null;
+    }
+
 }
 
 [RequireComponent(typeof(AudioSource))]
@@ -23,6 +102,8 @@ public class MapEditManager : ActionHistory, ISongManager
     [SerializeField] SongTrack mapTrack;
     [SerializeField] AudioSource audioSource;
     [SerializeField] List<GameObject> lanes;
+    [SerializeField] string filePath;
+    [SerializeField] PlayerInput playerInput;
     public TimelineImageCreator timelineImageCreator;
     public TempoMarkManager tempoMarkManager;
     public TimeBar timeBar;
@@ -32,6 +113,7 @@ public class MapEditManager : ActionHistory, ISongManager
     [SerializeField] RawImage enemyImg;
     [SerializeField] RawImage noteImg;
     [SerializeField] float timePad = 0.1f;
+    private MessagePackSerializerOptions MPOptions;
 
     public SongTrack MapTrack => mapTrack;
     public AudioSource AudioSource => audioSource;
@@ -39,10 +121,19 @@ public class MapEditManager : ActionHistory, ISongManager
 
     private void Start()
     {
-        JsonConvert.DefaultSettings = () => new JsonSerializerSettings
-        {
-            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-        };
+        MPOptions =
+        new MessagePackSerializerOptions(
+        CompositeResolver.Create(
+                UnityResolver.Instance,
+                StandardResolver.Instance,
+                BuiltinResolver.Instance,
+                //default resolver
+                ContractlessStandardResolver.Instance));
+
+        //JsonConvert.DefaultSettings = () => new JsonSerializerSettings()
+        //{
+        //    ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
+        //};
 
         void ShortAudioPlay(float duration)
         {
@@ -58,12 +149,19 @@ public class MapEditManager : ActionHistory, ISongManager
             }
         }
 
-
+        double lastTime = -1;
         seekBar.onSeekBarMoved.AddListener((time) =>
         {
+            if(time == lastTime) return;
+
             if(!AudioSource.isPlaying) ShortAudioPlay(.1f);
             UpdateVisuals();
+
+            lastTime = time;
         });
+
+        if(!string.IsNullOrWhiteSpace(filePath))
+            LoadFile(filePath);
 
         UpdateVisuals();
     }
@@ -83,6 +181,41 @@ public class MapEditManager : ActionHistory, ISongManager
         if(AudioSource.isPlaying)
             UpdateVisuals();
 
+    }
+
+    public void SaveFile(string path)
+    {
+        try
+        {
+            var phase = playerInput?.actions?.FindAction("Save")?.phase;
+            if((int)phase > 1 && phase != InputActionPhase.Performed) return;
+
+            ((ISongManager)this).SaveFile(path, MPOptions);
+
+            print($"Saved file [{phase.ToString()}]");
+        }
+        catch(Exception e)
+        {
+            Debug.LogError($"{e}");
+        }
+        //  print(JsonUtility.ToJson(pile.ocupado,true));
+
+        // return true;
+    }
+
+    public bool LoadFile(string path)
+    {
+        if(!File.Exists(path)) return false;
+
+
+        mapTrack = ((ISongManager)this).LoadFile(path, MPOptions);
+
+        tempoMarkManager?.MarkerUpdate();
+        UpdateVisuals();
+
+        print("Loaded file");
+
+        return true;
     }
 
     public void AddTempo(float BPM, double time, bool nested = false)
@@ -215,21 +348,13 @@ public class MapEditManager : ActionHistory, ISongManager
         {
             pile.ocupado.laneIndex = lane;
             pile.ocupado.hitLocationsIndex = hitLocationsIndex;
-            pile.ocupado.track = MapTrack;
+            //pile.ocupado.track = MapTrack;
             pile.ocupado.spawnTime = spawnTime;
             // pile.ocupado.startTime =   pile.ocupado.startTime;
             pile.ocupado.endTime = pile.ocupado.startTime + duration;
         }
 
-        //var ser = JsonConvert.SerializeObject(MapTrack, Formatting.Indented);
-        //var ret = JsonConvert.DeserializeObject<SongTrack>(ser);
-        //print(ret?.name);
-
-        //  print(JsonUtility.ToJson(pile.ocupado,true));
-        if(pile.ocupado != null)
-            UpdateVisuals();
-
-        var beat = pile.ocupado.Clone();
+        var beat = pile.ocupado?.Clone();
         AddToActionHistory(t =>
         {
             seekBar.SetLocation(beat.startTime);
@@ -243,8 +368,11 @@ public class MapEditManager : ActionHistory, ISongManager
                 break;
             }
         }, nested);
-    }
 
+        if(pile.ocupado != null)
+            UpdateVisuals();
+
+    }
     public void RemoveEnemy(int lane, bool nested = false)
     {
         var pile = AddToTheBodyPile.pile.Find((pile) => pile.laneNum == lane);
@@ -254,8 +382,6 @@ public class MapEditManager : ActionHistory, ISongManager
 
         MapTrack.beats.Remove(pile.ocupado);
         pile.ocupado = null;
-
-        UpdateVisuals();
 
         AddToActionHistory(t =>
         {
@@ -270,6 +396,8 @@ public class MapEditManager : ActionHistory, ISongManager
                 break;
             }
         }, nested);
+
+        UpdateVisuals();
     }
 
     //public void ToggleEnemy(int lane)
@@ -290,8 +418,6 @@ public class MapEditManager : ActionHistory, ISongManager
         beat?.AddNote(seekBar.currentTime, hitLocation, hitType);
 
 
-        UpdateVisuals();
-
         var beatClone = beat?.Clone();
 
         AddToActionHistory(t =>
@@ -308,6 +434,8 @@ public class MapEditManager : ActionHistory, ISongManager
                 break;
             }
         }, nested);
+
+        UpdateVisuals();
     }
 
     public void RemoveNote(int lane, double time, int hitLocation, HitType hitType, float timePad, bool nested = false)
@@ -319,8 +447,6 @@ public class MapEditManager : ActionHistory, ISongManager
         beat.RemoveNote(time, hitLocation, hitType, timePad);
         pile.ocupado = null;
 
-
-        UpdateVisuals();
 
         AddToActionHistory(t =>
         {
@@ -335,6 +461,8 @@ public class MapEditManager : ActionHistory, ISongManager
                 break;
             }
         }, nested);
+
+        UpdateVisuals();
     }
 
     public void UpdateVisuals()
@@ -350,18 +478,15 @@ public class MapEditManager : ActionHistory, ISongManager
             if((lane.ocupado != null && !enemies.Any(p => p.laneIndex == lane.laneNum)) ||
                (lane.ocupado == null && lane.GetComponentInParent<HitLocationVisualizer>().enabled))
             {
-                lane.GetComponentsInChildren<RawImage>()?.ToList().
-                    ForEach((img) =>
+                Array.ForEach(lane.GetComponentsInChildren<RawImage>(),
+                    (img) =>
                     {
                         if(img.gameObject != lane.gameObject)
-                        {
                             Destroy(img.gameObject);
-                        }
                     });
 
                 lane.GetComponentInParent<HitLocationVisualizer>().enabled = false;
                 lane.ocupado = null;
-
             }
 
 
@@ -372,7 +497,7 @@ public class MapEditManager : ActionHistory, ISongManager
             var visualizer = pile.GetComponentInParent<HitLocationVisualizer>();
             if(visualizer)
             {
-                visualizer.hitPoints = MapTrack.hitLocationsList[enemy.hitLocationsIndex];
+                visualizer.hitLocations = MapTrack.hitLocationsList[enemy.hitLocationsIndex];
 
                 //add if not already present
                 if(!visualizer.enabled)
@@ -422,9 +547,9 @@ public class MapEditManager : ActionHistory, ISongManager
 
 
 
-            print("Completed updating visuals");
+            //  print("Completed updating visuals");
         }
     }
 
-    bool InRange(float val, float min, float max) => val >= min && val <= max;
+    bool InRange(double val, double min, double max) => val >= min && val <= max;
 }

@@ -3,13 +3,9 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
-using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.EventSystems;
-using UnityEngine.Rendering.Universal;
+using UnityEngine; 
 using UnityEngine.UI;
-
-using static UnityEditor.Searcher.SearcherWindow.Alignment;
+ 
 
 public class TempoMarkManager : MonoBehaviour
 {
@@ -17,6 +13,7 @@ public class TempoMarkManager : MonoBehaviour
     //public TimeSig timeSig = new TimeSig() { beats = 10, note = 4 };
 
     [SerializeField] private ScrollRect rect;
+    [SerializeField] private RectTransform markerParent;
     [SerializeField] private GameObject tmpMarker;
     [SerializeField] private List<GameObject> beatMarkers = new List<GameObject>();
 
@@ -43,7 +40,10 @@ public class TempoMarkManager : MonoBehaviour
         // var source = m_creator.AudioSource;
         var timebarPos = (time / duration);
 
-        var contentRect = rect.content;
+        while(content.rect.size == Vector2.zero)
+            content = content.parent as RectTransform;
+
+        var contentRect = content;
         var pos = Vector2.Lerp(contentRect.rect.min, contentRect.rect.max, (float)timebarPos);
 
         marker.localPosition = new Vector2(
@@ -59,7 +59,7 @@ public class TempoMarkManager : MonoBehaviour
         //
         //var beat = tempo.GetNextBeat(time);
 
-        beatMarkers.Add(Instantiate(tmpMarker, rect.content, false));
+        beatMarkers.Add(Instantiate(tmpMarker, markerParent, false));
         var marker = beatMarkers.Last();
         var markerTrans = marker.GetComponent<RectTransform>();
         var tempoMark = marker.AddComponent<TempoMark>();
@@ -68,7 +68,7 @@ public class TempoMarkManager : MonoBehaviour
 
         SetMarkerOrientation(marker.GetComponent<RectTransform>(), vertical, 5, widthP);
 
-        PlaceMarker(markerTrans, time, mapEditManager.AudioSource.clip.length, vertical, rect.content);
+        PlaceMarker(markerTrans, time, mapEditManager.AudioSource.clip.length, vertical, markerParent != null ? markerParent : rect.content);
     }
 
     public void MarkerUpdate()
@@ -131,10 +131,10 @@ public class TempoMarkManager : MonoBehaviour
                 {
                     var check = Math.Pow(pow, a);//=2^a 
 
-                    if(check > (beatsCalc / 2))//never change this
+                    if(check > (beatsCalc / 2))//never change this (stops un-needed bar line division sizes)
                         continue;
 
-                    var checkOfBar = beatOfBar;
+                    var checkOfBar = beatOfBar;//not needed but I'll keep it.
 
                     var calc =
                        (beatsCalc % 3) == 0 ?
