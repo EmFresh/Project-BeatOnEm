@@ -9,7 +9,7 @@ public class CreateSong : MonoBehaviour
 {
     public SongTrack track;
 
-    public new AudioSource audio;
+    public AudioSource audio;
 
 
 
@@ -35,7 +35,7 @@ public class CreateSong : MonoBehaviour
                 //tmp.noteData = new NoteData();
                 //tmp.noteData.hitTimings = new List<float> { audio.time };
                 //tmp.noteData.hitTypes = new List<HitType> { note[ran.Next(0, 4)] };
-                
+
                 track.beats.Add(tmp);
 
                 //string path = $"Assets/_scripts/SongNotes/Note{num++}.asset";//realized that number is now a static variable even out of scope

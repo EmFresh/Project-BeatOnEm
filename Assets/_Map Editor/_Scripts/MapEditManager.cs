@@ -503,7 +503,7 @@ public class MapEditManager : ActionHistory, ISongManager
                 if(!visualizer.enabled)
                 {
                     pile.ocupado = enemy;
-                    visualizer.scale = Vector3.one * 100;
+                    visualizer.scale = Vector3.one * 100 * 3;
 
                     var obj = Instantiate(enemyImg.gameObject, pile.transform, false);
                     obj.transform.SetAsFirstSibling();
