@@ -1,4 +1,10 @@
-﻿using System;
+﻿/*
+ File: BeatData.cs
+ Brief: Data container types used to describe song notes and grouped beat sections. Includes serializable
+ representations used by MessagePack for saving/loading.
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -21,13 +27,20 @@ TOD:
 
 
 [Serializable]
+/// <summary>Describes the category of hit associated with a note.</summary>
 public enum HitType : int
 {
+    /// <summary>No specific hit type.</summary>
     NONE,
+    /// <summary>First placeholder hit type.</summary>
     TEST1,
+    /// <summary>Second placeholder hit type.</summary>
     TEST2,
+    /// <summary>Third placeholder hit type.</summary>
     TEST3,
+    /// <summary>Fourth placeholder hit type.</summary>
     TEST4,
+    /// <summary>Hit type represented by an image.</summary>
     IMAGE,
 }
 
@@ -57,6 +70,10 @@ public struct NoteData
     public HitType hitType;
 
 
+    /// <summary>
+    /// Create a shallow clone of this NoteData value.
+    /// </summary>
+    /// <returns>A copy of the struct with the same values.</returns>
     public NoteData Clone() => new NoteData() { hitLocation = hitLocation, hitTiming = hitTiming, hitType = hitType };
 }
 
@@ -72,13 +89,30 @@ public partial class BeatData
 
     //public SongTrack track = null;
 
+    /// <summary>
+    /// The list of notes contained in this beat section.
+    /// </summary>
     public List<NoteData> noteDataList = new List<NoteData>();
+
+    /// <summary>
+    /// Index into a HitLocations table used by the spawner.
+    /// </summary>
     public int hitLocationsIndex = -1; //locations where you can hit the enemies
 
+    /// <summary>Index of the lane containing this beat section.</summary>
     public int laneIndex = -1;
+    /// <summary>Index of the enemy prefab associated with this beat section.</summary>
     public int enemyIndex = -1;
+    /// <summary>Start and end times of this beat section in seconds.</summary>
     public double startTime = 0, endTime = 0;
 
+    /// <summary>
+    /// Add a note to this beat group, avoiding duplicates within the provided time pad window.
+    /// </summary>
+    /// <param name="hitTiming">Timing of the note in seconds.</param>
+    /// <param name="hitLocation">Index of the hit location.</param>
+    /// <param name="hitType">Type of hit to record.</param>
+    /// <param name="timePad">Tolerance for duplicate detection in seconds.</param>
     public void AddNote(double hitTiming, int hitLocation, HitType hitType, float timePad = 0)
     {
         if(noteDataList.Any((note) =>
@@ -89,11 +123,26 @@ public partial class BeatData
         noteDataList.Add(new NoteData() { hitLocation = hitLocation, hitTiming = hitTiming, hitType = hitType });
     }
 
+    /// <summary>
+    /// Remove notes that match the specified parameters within the tolerance window.
+    /// </summary>
+    /// <param name="hitTiming">Timing to match.</param>
+    /// <param name="hitLocation">Hit location index to match.</param>
+    /// <param name="hitType">Hit type to match.</param>
+    /// <param name="timePad">Tolerance window in seconds.</param>
     public void RemoveNote(double hitTiming, int hitLocation, HitType hitType, float timePad = 0)
     {
         noteDataList.RemoveAll((note) => InRange(hitTiming, note.hitTiming - timePad, note.hitTiming + timePad) && note.hitLocation == hitLocation && note.hitType == hitType);
     }
 
+    /// <summary>
+    /// Retrieve a single note that matches the specified timing and optional filters.
+    /// </summary>
+    /// <param name="hitTiming">Target timing to search for.</param>
+    /// <param name="TimePad">Tolerance in seconds.</param>
+    /// <param name="hitLocation">Optional hit location filter; -1 to ignore.</param>
+    /// <param name="hitType">Optional hit type filter; -1 to ignore.</param>
+    /// <returns>The first matching NoteData or default if none found.</returns>
     public NoteData GetNote(double hitTiming, float TimePad = 0, int hitLocation = -1, HitType hitType = (HitType)(-1)) =>
         noteDataList.FirstOrDefault((note) =>
         InRange(hitTiming, note.hitTiming - TimePad, note.hitTiming + TimePad) &&
@@ -101,9 +150,19 @@ public partial class BeatData
         note.hitType == (hitType == (hitType) - 1 ? note.hitType : hitType));
 
 
+    /// <summary>
+    /// Get all notes within the provided timing window.
+    /// </summary>
+    /// <param name="hitTiming">Center timing.</param>
+    /// <param name="timePad">Tolerance window.</param>
+    /// <returns>List of matching NoteData.</returns>
     public List<NoteData> GetNotes(double hitTiming, float timePad) =>
          noteDataList?.Where((note) => InRange(hitTiming, note.hitTiming - timePad, note.hitTiming + timePad))?.ToList() ?? new List<NoteData>();
 
+    /// <summary>
+    /// Create a deep-ish clone of this BeatData instance.
+    /// </summary>
+    /// <returns>A new BeatData instance with copied fields.</returns>
     public BeatData Clone() => new BeatData()
     {
         noteDataList = noteDataList.Select(note => note.Clone()).ToList(),
@@ -117,6 +176,11 @@ public partial class BeatData
         //track = track,
     };
 
+    /// <summary>Determines whether a value falls within an inclusive numeric interval.</summary>
+    /// <param name="val">Value to test.</param>
+    /// <param name="min">Inclusive lower bound.</param>
+    /// <param name="max">Inclusive upper bound.</param>
+    /// <returns><see langword="true"/> when the value is within the bounds; otherwise, <see langword="false"/>.</returns>
     bool InRange(double val, double min, double max) => val >= min && val <= max;
 
 
@@ -137,11 +201,13 @@ public partial class BeatData
     /// the spawn time based on the first enemy hitTiming 
     /// </summary>
     [IgnoreMember]
+    /// <summary>Gets or sets the time offset used to calculate the enemy spawn time from the section start.</summary>
     public double spawnTime
     {
         set => _spawnTimeOffset = value;
         get => (startTime) - Math.Abs(_spawnTimeOffset);
     }
+    /// <summary>Backing offset used by <see cref="spawnTime"/>.</summary>
     private double _spawnTimeOffset = 2.5d;
 }
 

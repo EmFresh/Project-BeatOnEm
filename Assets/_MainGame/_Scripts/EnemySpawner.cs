@@ -1,4 +1,9 @@
-﻿using System;
+﻿/*
+ File: EnemySpawner.cs
+ Brief: Instantiates enemy GameObjects based on SongTrack beat data and handles their initialization and timing.
+*/
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -32,6 +37,7 @@ public class EnemySpawner : MonoBehaviour
     public float reactTime = 2.1f;
 
     [HideInInspector]
+    /// <summary>World controller used to position spawned enemies.</summary>
     public WorldControl mapMover;
 
     /// <summary>
@@ -62,6 +68,8 @@ public class EnemySpawner : MonoBehaviour
     private void Start()
     {
         StartCoroutine(printer());
+        /// <summary>Waits for scene initialization before applying world scale and logging controls.</summary>
+        /// <returns>A coroutine enumerator for delayed startup work.</returns>
         IEnumerator printer()
         {
             for(int a = 0; a < 50; ++a)
@@ -73,8 +81,13 @@ public class EnemySpawner : MonoBehaviour
         }   
     }
 
-    int last = 0, texNum = 0;
+    /// <summary>Index of the next scheduled beat section to spawn.</summary>
+    int last = 0;
+    /// <summary>Current texture index retained for the spawning workflow.</summary>
+    int texNum = 0;
+    /// <summary>Indicates whether the beat schedule still needs initialization.</summary>
     bool init = true;
+    /// <summary>Spawn times paired with their corresponding beat sections.</summary>
     List<(double, BeatData)> timings = new List<(double, BeatData)>();
     /// <summary>
     /// Internal spawn update loop that instantiates enemies when their spawn window is reached.
@@ -94,6 +107,9 @@ public class EnemySpawner : MonoBehaviour
             init = false;
         }
 
+        /// <summary>Instantiates the enemy prefab at the requested index under the configured parent.</summary>
+        /// <param name="index">Enemy prefab index.</param>
+        /// <returns>The instantiated enemy, or null when the index is out of range.</returns>
         GameObject createEnemy(int index)
         {
             if(index < 0) index = 0;

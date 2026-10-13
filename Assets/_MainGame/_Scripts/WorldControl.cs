@@ -1,3 +1,7 @@
+/*
+ File: WorldControl.cs
+ Brief: Controls world movement and playback state for scrolling gameplay scenes.
+*/
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,8 +14,10 @@ using UnityEngine.Events;
 public class WorldControl : MonoBehaviour
 {
 	[SerializeField]
+	/// <summary>Backing value for the world movement speed.</summary>
 	private float m_speed = 10;
 	[SerializeField]
+	/// <summary>Backing value indicating whether world movement is paused.</summary>
 	private bool m_pause = false;
 
 	/// <summary>
@@ -41,13 +47,17 @@ public class WorldControl : MonoBehaviour
 	}
 
 
+	/// <summary>Event invoked when world movement resumes.</summary>
 	public UnityEvent onPlay;
+	/// <summary>Event invoked when world movement is paused.</summary>
 	public UnityEvent onPause;
+	/// <summary>Event invoked with the new speed when world movement speed changes.</summary>
 	public UnityEvent<float> onSpeedChange;
 
 
 
 	// Update is called once per frame
+	/// <summary>Moves the world along the negative Z axis while it is not paused.</summary>
 	void Update()
 	{
 		if(!m_pause)

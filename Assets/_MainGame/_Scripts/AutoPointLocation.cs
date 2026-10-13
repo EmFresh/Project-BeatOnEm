@@ -1,3 +1,8 @@
+/*
+ File: AutoPointLocation.cs
+ Brief: Positions a GameObject at a computed offset from a HitLocations instance; useful for auto-updating hitpoint visuals.
+*/
+
 using UnityEngine;
 
 /// <summary>
@@ -15,6 +20,7 @@ public class AutoPointLocation : MonoBehaviour
     /// </summary>
     public HitLocations hitPoints;
     // Update is called once per frame
+    /// <summary>Updates the attached object's position from its configured hit-location data.</summary>
     void Update()
     {
         var pos = hitPoints.GetOffsetPoint(point);

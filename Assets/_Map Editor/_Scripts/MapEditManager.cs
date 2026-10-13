@@ -1,3 +1,9 @@
+/*
+ File: MapEditManager.cs
+ Brief: Provides editor-side map management including loading/saving map packages, managing the timeline UI
+ and exposing an ISongManager interface for other components to interact with song data.
+*/
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -50,6 +56,13 @@ public interface ISongManager
     /// </summary>
     public List<GameObject> Lanes { get; }
 
+    /// <summary>
+    /// Save the current MapTrack and associated audio/prefabs into a packaged file (zip) at the specified location.
+    /// </summary>
+    /// <param name="saveDir">Directory in which the package will be saved.</param>
+    /// <param name="audioPath">Path to the audio file to include in the package.</param>
+    /// <param name="name">Filename for the saved package.</param>
+    /// <param name="MPOptions">Optional MessagePack serializer options used to serialize the SongTrack.</param>
     public void SaveFile(string saveDir, string audioPath, string name, MessagePackSerializerOptions MPOptions = null)
     {
         MPOptions ??=
@@ -125,6 +138,12 @@ public interface ISongManager
         // return true;
     }
 
+    /// <summary>
+    /// Load a packaged map file (zip) and populate the MapTrack and audio clip from its contents.
+    /// </summary>
+    /// <param name="path">Full path to the package file to load.</param>
+    /// <param name="excludePrefabs">If true, prefab contents will not be applied to the MapTrack (used for editor workflows).</param>
+    /// <param name="MPOptions">Optional MessagePack serializer options used to deserialize the SongTrack.</param>
     public async Task LoadFile(string path, bool excludePrefabs = true, MessagePackSerializerOptions MPOptions = null)
     {
         Debug.Log($"Loading file: {path}");
@@ -222,26 +241,42 @@ public interface ISongManager
 /// </summary>
 public class MapEditManager : ActionHistory, ISongManager
 {
+    /// <summary>The song map currently being edited.</summary>
     [SerializeField] SongTrack mapTrack;
+    /// <summary>Audio source used to preview the current song.</summary>
     [SerializeField] AudioSource audioSource;
+    /// <summary>Editor settings containing map and audio file paths.</summary>
     [SerializeField] EditorSettings editorSettings;
+    /// <summary>Input actions used by editor controls.</summary>
     [SerializeField] PlayerInput playerInput;
+    /// <summary>Creates waveform and timeline image UI.</summary>
     public TimelineImageCreator timelineImageCreator;
+    /// <summary>Manages tempo and time-signature markers on the timeline.</summary>
     public TempoMarkManager tempoMarkManager;
+    /// <summary>Displays the current timeline time.</summary>
     public TimeBar timeBar;
+    /// <summary>Controls seeking through the song timeline.</summary>
     public SeekBar seekBar;
 
 
+    /// <summary>Template image used to display enemy hit locations.</summary>
     [SerializeField] RawImage enemyImg;
+    /// <summary>Template image used to display note hit locations.</summary>
     [SerializeField] RawImage noteImg;
+    /// <summary>Time tolerance, in seconds, used when matching notes for visualization.</summary>
     [SerializeField] float timePad = 0.1f;
+    /// <summary>Serializer options configured for map package persistence.</summary>
     private MessagePackSerializerOptions MPOptions;
 
+    /// <summary>Gets the current song map.</summary>
     public SongTrack MapTrack => mapTrack;
+    /// <summary>Gets the audio source associated with the current map.</summary>
     public AudioSource AudioSource => audioSource;
+    /// <summary>Gets the lane GameObjects managed by the shared body-pile collection.</summary>
     public List<GameObject> Lanes => AddToTheBodyPile.pile.Select(o => o.gameObject).ToList();
 
 
+    /// <summary>Initializes serializer settings, seek callbacks, and the saved editor map.</summary>
     private async void Start()
     {
         MPOptions =
@@ -258,11 +293,15 @@ public class MapEditManager : ActionHistory, ISongManager
         //    ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
         //};
 
+        /// <summary>Plays a brief audio segment from the current playhead position.</summary>
+        /// <param name="duration">Playback duration in seconds.</param>
         void ShortAudioPlay(float duration)
         {
             var clip = GetComponent<AudioSource>(); clip.clip = AudioSource.clip;
             clip.SetAccurateTime(seekBar.currentTime);
             StartCoroutine(StartStop());
+            /// <summary>Plays the clip and pauses it after the requested short interval.</summary>
+            /// <returns>A coroutine enumerator for short playback.</returns>
             IEnumerator StartStop()
             {
                 clip.Play();
@@ -294,6 +333,7 @@ public class MapEditManager : ActionHistory, ISongManager
         }
     }
 
+    /// <summary>Processes playback input and refreshes map visuals while audio is playing.</summary>
     private void Update()
     {
         if(Keyboard.current.spaceKey.wasPressedThisFrame)
@@ -315,7 +355,13 @@ public class MapEditManager : ActionHistory, ISongManager
     }
 
 
+    /// <summary>Saves the current map using the configured editor paths and filename.</summary>
     public void SaveFile() => SaveFile(editorSettings.FileDir, editorSettings.AudioDir, editorSettings.FileName + EXTENSION);
+
+    /// <summary>Saves the current map and audio into a packaged map file.</summary>
+    /// <param name="saveDir">Directory in which to save the package.</param>
+    /// <param name="audioPath">Path to the audio file included in the package.</param>
+    /// <param name="name">Package filename.</param>
     public void SaveFile(string saveDir, string audioPath, string name)
     {
         try
@@ -337,6 +383,7 @@ public class MapEditManager : ActionHistory, ISongManager
     }
 
 
+    /// <summary>Opens a file picker and loads the selected map package.</summary>
     public void LoadFile() =>
 
         FileBrowser.ShowLoadDialog(async paths =>
@@ -344,6 +391,9 @@ public class MapEditManager : ActionHistory, ISongManager
             await LoadFile(paths[0]);
         }, null, FileBrowser.PickMode.Files, allowMultiSelection: false, title: "Load Map File");
 
+    /// <summary>Loads a map package and refreshes timeline markers and visuals.</summary>
+    /// <param name="path">Full path to the package file.</param>
+    /// <returns><see langword="true"/> when the file exists and the load operation is invoked; otherwise, <see langword="false"/>.</returns>
     public async Task<bool> LoadFile(string path)
     {
         //print($"Path to file: {path}");
@@ -364,6 +414,10 @@ public class MapEditManager : ActionHistory, ISongManager
         return true;
     }
 
+    /// <summary>Adds a tempo change and records the operation for undo and redo.</summary>
+    /// <param name="BPM">Tempo in beats per minute.</param>
+    /// <param name="time">Time in seconds at which the tempo takes effect.</param>
+    /// <param name="nested">Whether this operation is part of another history action.</param>
     public void AddTempo(float BPM, double time, bool nested = false)
     {
         MapTrack.tempoMap.AddTempo(BPM, time);
@@ -384,6 +438,12 @@ public class MapEditManager : ActionHistory, ISongManager
             }
         }, nested);
     }
+
+    /// <summary>Adds a time-signature change and records the operation for undo and redo.</summary>
+    /// <param name="beats">Numerator of the time signature.</param>
+    /// <param name="note">Denominator of the time signature.</param>
+    /// <param name="time">Time in seconds at which the signature takes effect.</param>
+    /// <param name="nested">Whether this operation is part of another history action.</param>
     public void AddTimeSig(int beats, int note, double time, bool nested = false)
     {
         MapTrack.tempoMap.AddTimeSig(beats, note, time);
@@ -405,6 +465,10 @@ public class MapEditManager : ActionHistory, ISongManager
         }, nested);
     }
 
+    /// <summary>Changes the effective tempo and records the operation for undo and redo.</summary>
+    /// <param name="tempo">New tempo in beats per minute.</param>
+    /// <param name="time">Time in seconds of the tempo entry to edit.</param>
+    /// <param name="nested">Whether this operation is part of another history action.</param>
     public void EditTempo(float tempo, double time, bool nested = false)
     {
         var oldTempo = MapTrack.tempoMap.GetTempo(time).Clone();
@@ -427,6 +491,12 @@ public class MapEditManager : ActionHistory, ISongManager
             }
         }, nested);
     }
+
+    /// <summary>Changes the effective time signature and records the operation for undo and redo.</summary>
+    /// <param name="beats">New time-signature numerator.</param>
+    /// <param name="note">New time-signature denominator.</param>
+    /// <param name="time">Time in seconds of the signature entry to edit.</param>
+    /// <param name="nested">Whether this operation is part of another history action.</param>
     public void EditTimeSig(int beats, int note, double time, bool nested = false)
     {
         var oldSig = MapTrack.tempoMap.GetTimeSig(time).Clone();
@@ -452,6 +522,9 @@ public class MapEditManager : ActionHistory, ISongManager
         }, nested);
     }
 
+    /// <summary>Removes the tempo effective at the specified time and records undo and redo actions.</summary>
+    /// <param name="time">Time in seconds used to locate the tempo entry.</param>
+    /// <param name="nested">Whether this operation is part of another history action.</param>
     public void RemoveTempo(double time, bool nested = false)
     {
         var oldTempo = MapTrack.tempoMap.GetTempo(time).Clone();
@@ -479,6 +552,10 @@ public class MapEditManager : ActionHistory, ISongManager
             }
         }, nested);
     }
+
+    /// <summary>Removes the time signature effective at the specified time and records undo and redo actions.</summary>
+    /// <param name="time">Time in seconds used to locate the time-signature entry.</param>
+    /// <param name="nested">Whether this operation is part of another history action.</param>
     public void RemoveTimeSig(double time, bool nested = false)
     {
         var oldTimSig = MapTrack.tempoMap.GetTimeSig(time).Clone();
@@ -501,6 +578,12 @@ public class MapEditManager : ActionHistory, ISongManager
         }, nested);
     }
 
+    /// <summary>Adds or updates an enemy section in a lane and records the operation for undo and redo.</summary>
+    /// <param name="lane">Lane index receiving the enemy.</param>
+    /// <param name="hitLocationsIndex">Index of the hit-location definition.</param>
+    /// <param name="duration">Duration of the enemy section in seconds.</param>
+    /// <param name="spawnTime">Enemy spawn time in seconds.</param>
+    /// <param name="nested">Whether this operation is part of another history action.</param>
     public void AddEnemy(int lane, int hitLocationsIndex, double duration, double spawnTime, bool nested = false)
     {
 
@@ -538,6 +621,10 @@ public class MapEditManager : ActionHistory, ISongManager
             UpdateVisuals();
 
     }
+
+    /// <summary>Removes the enemy section in the specified lane and records undo and redo actions.</summary>
+    /// <param name="lane">Lane index from which to remove the enemy.</param>
+    /// <param name="nested">Whether this operation is part of another history action.</param>
     public void RemoveEnemy(int lane, bool nested = false)
     {
         var pile = AddToTheBodyPile.pile.Find((pile) => pile.laneNum == lane);
@@ -576,6 +663,11 @@ public class MapEditManager : ActionHistory, ISongManager
     //        AddEnemy(lane);
     //}
 
+    /// <summary>Adds a note at the current playhead position and records the operation for undo and redo.</summary>
+    /// <param name="lane">Lane containing the beat section.</param>
+    /// <param name="hitLocation">Hit-location index for the note.</param>
+    /// <param name="hitType">Type of hit represented by the note.</param>
+    /// <param name="nested">Whether this operation is part of another history action.</param>
     public void AddNote(int lane, int hitLocation, HitType hitType, bool nested = false)
     {
         var pile = AddToTheBodyPile.pile.Find((pile) => pile.laneNum == lane);
@@ -606,6 +698,14 @@ public class MapEditManager : ActionHistory, ISongManager
 
         UpdateVisuals();
     }
+
+    /// <summary>Removes a matching note from the specified lane and records undo and redo actions.</summary>
+    /// <param name="lane">Lane containing the beat section.</param>
+    /// <param name="time">Note timing in seconds.</param>
+    /// <param name="hitLocation">Hit-location index for the note.</param>
+    /// <param name="hitType">Type of hit represented by the note.</param>
+    /// <param name="timePad">Timing tolerance in seconds.</param>
+    /// <param name="nested">Whether this operation is part of another history action.</param>
     public void RemoveNote(int lane, double time, int hitLocation, HitType hitType, float timePad, bool nested = false)
     {
 
@@ -635,6 +735,7 @@ public class MapEditManager : ActionHistory, ISongManager
         UpdateVisuals();
     }
 
+    /// <summary>Updates lane hit-location visuals and note colors for the current song time.</summary>
     public void UpdateVisuals()
     {
         var time = AudioSource.isPlaying ? AudioSource.time : seekBar.currentTime;
@@ -722,5 +823,10 @@ public class MapEditManager : ActionHistory, ISongManager
         }
     }
 
+    /// <summary>Determines whether a value falls within an inclusive numeric interval.</summary>
+    /// <param name="val">Value to test.</param>
+    /// <param name="min">Inclusive lower bound.</param>
+    /// <param name="max">Inclusive upper bound.</param>
+    /// <returns><see langword="true"/> when the value is within the bounds; otherwise, <see langword="false"/>.</returns>
     bool InRange(double val, double min, double max) => val >= min && val <= max;
 }

@@ -1,3 +1,9 @@
+/*
+ File: SeekBar.cs
+ Brief: Interactive seek bar control used by the map editor timeline. Supports pointer interactions,
+ snapping to beats, and notifying listeners when the playhead position changes.
+*/
+
 using System;
 using System.Collections;
 using System.Linq;
@@ -140,6 +146,11 @@ public class SeekBar : MonoBehaviour
         m_seekBarTrans.localPosition = new Vector2(vertical ? rect.center.x : rect.xMin, vertical ? rect.yMin : rect.center.y);
     }
 
+    /// <summary>Determines whether a value falls within an inclusive numeric interval.</summary>
+    /// <param name="val">Value to test.</param>
+    /// <param name="min">Inclusive lower bound.</param>
+    /// <param name="max">Inclusive upper bound.</param>
+    /// <returns><see langword="true"/> when the value is within the bounds; otherwise, <see langword="false"/>.</returns>
     bool InRange(double val, double min, double max) => val >= min && val <= max;
 
     /// <summary>

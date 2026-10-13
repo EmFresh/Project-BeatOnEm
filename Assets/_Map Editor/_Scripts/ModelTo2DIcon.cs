@@ -1,3 +1,9 @@
+/*
+ File: ModelTo2DIcon.cs
+ Brief: Renders a 3D GameObject into a 2D texture using a dedicated camera and assigns it to a RawImage.
+ Useful for generating thumbnails/icons from in-scene models.
+*/
+
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -52,21 +58,32 @@ public partial class ModelTo2DIcon : MonoBehaviour
     //     }
     // }
 
+    /// <summary>
+    /// Unity Awake callback. Converts the configured target object into a texture and assigns it to the RawImage.
+    /// </summary>
     private void Awake()
     {
 
         GetComponent<RawImage>().texture = Convert(targetObject, renderCam, true);
     }
 
+    /// <summary>Stores the inputs and rendered texture associated with a model-to-icon conversion.</summary>
     struct ConversionParams
     {
+        /// <summary>Object rendered to produce the icon.</summary>
         public GameObject obj;
+        /// <summary>Camera used to render the object.</summary>
         public Camera cam;
+        /// <summary>Texture receiving the rendered image.</summary>
         public Texture2D img;
+        /// <summary>Whether conversion renders a temporary instantiated object.</summary>
         public bool instantiateObj;
     }
 
     [AutoStaticsCleanup] private static HashSet<ConversionParams> values = new HashSet<ConversionParams>();
+    /// <summary>
+    /// Perform queued conversions in the static conversion set. This helper is used internally by the Convert overload.
+    /// </summary>
     public static void Convert()
     {
 
@@ -117,6 +134,13 @@ public partial class ModelTo2DIcon : MonoBehaviour
         // return img;
     }
 
+    /// <summary>
+    /// Convert a GameObject into a Texture2D by rendering it with the provided camera.
+    /// </summary>
+    /// <param name="obj">GameObject to render.</param>
+    /// <param name="renderCam">Camera used to render the object.</param>
+    /// <param name="instantiateObj">Whether to instantiate a temporary copy of the object for rendering.</param>
+    /// <returns>Texture2D containing the rendered icon.</returns>
     public static Texture2D Convert(GameObject obj, Camera renderCam, bool instantiateObj = false)
     {
         var val = new ConversionParams()

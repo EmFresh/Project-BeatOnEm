@@ -1,3 +1,9 @@
+/*
+ File: TempoMap.cs
+ Brief: Defines BPM, Tempo, TimeSig and TempoMap helper types used to represent tempo and time signature changes
+ across a song. Also includes Audio extension helpers for accurate timing calculations.
+*/
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,26 +13,60 @@ using MessagePack;
 
 using UnityEngine;
 
+/// <summary>Provides sample-accurate time and length helpers for Unity audio sources and clips.</summary>
 public static class AudioExtentions
 {
     /// <summary>
     /// Helper extensions to obtain accurate time and length values (in seconds or milliseconds)
     /// from Unity AudioSource/AudioClip using sample counts and frequency.
     /// </summary>
+    /// <summary>Gets playback time in seconds from the audio sample position.</summary>
+    /// <param name="source">Audio source whose playback position is queried.</param>
+    /// <returns>Playback time in seconds, or zero when the source has no clip.</returns>
     public static double AccurateTime(this AudioSource source) =>
         source.clip == null ? 0 : ((double)source.timeSamples / source.clip.frequency);
+    /// <summary>
+    /// Get accurate playback time in seconds using sample counts to avoid Unity's sample rounding.
+    /// </summary>
+    /// <summary>Gets playback time in milliseconds from the audio sample position.</summary>
+    /// <param name="source">Audio source whose playback position is queried.</param>
+    /// <returns>Playback time in milliseconds.</returns>
     public static int AccurateTimeMilli(this AudioSource source) =>
         (int)(source.AccurateTime() * 1000);
 
+    /// <summary>
+    /// <summary>Sets playback time in seconds by converting the time to an audio sample position.</summary>
+    /// <param name="source">Audio source whose playback position is changed.</param>
+    /// <param name="time">Playback time in seconds.</param>
+    /// <returns>The assigned sample position.</returns>
     public static int SetAccurateTime(this AudioSource source, double time) =>
         source.timeSamples = source.clip == null ? 0 : (int)(time * source.clip.frequency);
+    /// <summary>
+    /// Set the audio playback time precisely (seconds) using samples.
+    /// </summary>
+    /// <summary>Sets playback time in milliseconds by converting the time to an audio sample position.</summary>
+    /// <param name="source">Audio source whose playback position is changed.</param>
+    /// <param name="time">Playback time in milliseconds.</param>
+    /// <returns>The assigned sample position.</returns>
     public static int SetAccurateTimeMilli(this AudioSource source, int time) =>
         source.timeSamples = source.clip == null ? 0 : (int)(time * source.clip.frequency / 1000d);
-
+    /// <summary>
+    /// <summary>Gets the audio clip length in seconds from its sample count.</summary>
+    /// <param name="clip">Audio clip whose length is queried.</param>
+    /// <returns>Clip length in seconds, or zero when the clip is null.</returns>
     public static double AccurateLength(this AudioClip clip) =>
         clip == null ? 0 : ((double)clip.samples / clip.frequency);
+    /// <summary>
+    /// Get accurate clip length in seconds using sample counts.
+    /// </summary>
+    /// <summary>Gets the audio clip length in milliseconds from its sample count.</summary>
+    /// <param name="clip">Audio clip whose length is queried.</param>
+    /// <returns>Clip length in milliseconds.</returns>
     public static int AccurateLengthMilli(this AudioClip clip) =>
        (int)(clip.AccurateLength() * 1000);
+    /// <summary>
+    /// Get accurate clip length in milliseconds.
+    /// </summary>
 }
 
 [Serializable]
@@ -36,11 +76,21 @@ public static class AudioExtentions
 /// </summary>
 public partial class BPM
 {
+    /// <summary>Creates a beats-per-minute value.</summary>
+    /// <param name="bpm">Initial tempo in beats per minute; defaults to 60.</param>
     public BPM(float bpm = 60) => this.bpm = bpm;
 
+    /// <summary>Converts a BPM wrapper to its raw floating-point value.</summary>
+    /// <param name="bpm">Value to convert.</param>
+    /// <returns>The raw beats-per-minute value.</returns>
     public static implicit operator float(BPM bpm) => bpm.bpm;
+    /// <summary>Creates a BPM wrapper from a floating-point value.</summary>
+    /// <param name="bpm">Beats-per-minute value.</param>
+    /// <returns>A new BPM wrapper.</returns>
     public static implicit operator BPM(float bpm) => new BPM(bpm);
 
+    /// <summary>Returns the beats-per-minute value as text.</summary>
+    /// <returns>The raw BPM value formatted as a string.</returns>
     public override string ToString() => bpm.ToString();
 
     /// <summary>
@@ -49,7 +99,7 @@ public partial class BPM
     public float bpm;
     //1/60 = 0.0166667f
 
-    //seconds per beat
+    /// <summary>Gets the duration of one beat in seconds.</summary>
     [IgnoreMember]
     public double spb
     {
@@ -64,15 +114,17 @@ public partial class BPM
         }
     }
 
-    //milliseconds per beat
+    /// <summary>Gets the duration of one beat in milliseconds.</summary>
     [IgnoreMember]
     public int mspb
     {
         get => (int)(spb * 1000);
     }
 
+    /// <summary>Cached reciprocal BPM value used to calculate beat duration.</summary>
     [IgnoreMember]
     double _divider = 0;
+    /// <summary>Cached BPM value associated with <see cref="_divider"/>.</summary>
     [IgnoreMember]
     float _bpm = 0;
 }
@@ -84,19 +136,22 @@ public partial class BPM
 /// </summary>
 public class Tempo
 {
-    //beats per min 
+    /// <summary>Beats-per-minute value for this tempo entry.</summary>
     public BPM bpm = 80;
 
 
-    //song time stamp
+    /// <summary>Song time in seconds at which this tempo entry takes effect.</summary>
     public double timing = 0;
     [IgnoreMember]
+    /// <summary>Gets or sets the tempo entry time in milliseconds.</summary>
     public int TimingMilli { get => (int)(timing * 1000); set => timing = value / 1000; }
 
 
     /// <summary>
     /// Compute the time (seconds) of the next beat after the provided note time.
     /// </summary>
+    /// <param name="noteTime">Note time in seconds.</param>
+    /// <returns>The next beat time in seconds.</returns>
     public double GetNextBeat(double noteTime)
     {
         var currentTime = noteTime - timing;
@@ -109,6 +164,8 @@ public class Tempo
     /// <summary>
     /// Compute the time (milliseconds) of the next beat after the provided note time in milliseconds.
     /// </summary>
+    /// <param name="noteTimeMilli">Note time in milliseconds.</param>
+    /// <returns>The next beat time in milliseconds.</returns>
     public int GetNextBeatMilli(int noteTimeMilli)
     {
         var currentTime = noteTimeMilli - TimingMilli;
@@ -120,6 +177,8 @@ public class Tempo
         return check ? (((amount + 2) * (int)(bpm.mspb)) + TimingMilli) : val;
     }
 
+    /// <summary>Returns the tempo and effective time as text.</summary>
+    /// <returns>A string containing this tempo entry's BPM and time.</returns>
     public override string ToString()
     {
         return
@@ -127,6 +186,8 @@ public class Tempo
             $"timing:{timing}";
     }
 
+    /// <summary>Creates a copy of this tempo entry.</summary>
+    /// <returns>A new tempo entry with the same BPM and timing.</returns>
     public Tempo Clone() => new Tempo() { bpm = bpm.bpm, timing = timing };
 
 }
@@ -138,22 +199,28 @@ public class Tempo
 /// </summary>
 public class TimeSig
 {
-    //numerator
+    /// <summary>Number of beats in each measure.</summary>
     public int beats;
-    //denominator
+    /// <summary>Note value represented by each beat.</summary>
     public int note;
-    //where in the song ?
+    /// <summary>Song time in seconds at which this time signature takes effect.</summary>
     public double timing;
     [IgnoreMember]
+    /// <summary>Gets or sets the time-signature entry time in milliseconds.</summary>
     public int TimingMilli { get => (int)(timing * 1000); set => timing = value / 1000; }
 
+    /// <summary>Creates a 2/4 time signature effective at the start of the song.</summary>
     public static TimeSig HalfTime { get => new TimeSig() { beats = 2, note = 4, timing = 0 }; }
+    /// <summary>Creates a 4/4 time signature effective at the start of the song.</summary>
     public static TimeSig CommonTime { get => new TimeSig() { beats = 4, note = 4, timing = 0 }; }
 
 
     /// <summary>
     /// Returns the beat index (0-based) within the measure for the provided note time using the given tempo.
     /// </summary>
+    /// <param name="noteTime">Note time in seconds.</param>
+    /// <param name="tempo">Tempo used to calculate the beat position.</param>
+    /// <returns>The zero-based beat index within the measure.</returns>
     public int GetNextBeat(double noteTime, Tempo tempo)
     {
         var currentTime = noteTime - tempo.timing;
@@ -169,6 +236,9 @@ public class TimeSig
     /// <summary>
     /// Returns the beat index (0-based) within the measure for the provided note time in milliseconds using the given tempo.
     /// </summary>
+    /// <param name="noteTimeMilli">Note time in milliseconds.</param>
+    /// <param name="tempo">Tempo used to calculate the beat position.</param>
+    /// <returns>The zero-based beat index within the measure.</returns>
     public int GetNextBeatMilli(int noteTimeMilli, Tempo tempo)
     {
         var currentTime = noteTimeMilli - tempo.TimingMilli;
@@ -181,6 +251,8 @@ public class TimeSig
         return Mathf.FloorToInt((check ? (amount + 2) : (amount + 1)) % beatsCalc);
     }
 
+    /// <summary>Returns the time-signature values and effective time as text.</summary>
+    /// <returns>A string containing the numerator, denominator, and timing.</returns>
     public override string ToString()
     {
         return
@@ -189,6 +261,8 @@ public class TimeSig
             $"timing:{timing}";
     }
 
+    /// <summary>Creates a copy of this time-signature entry.</summary>
+    /// <returns>A new entry with the same beats, note value, and timing.</returns>
     public TimeSig Clone() => new TimeSig() { beats = beats, note = note, timing = timing };
 }
 
@@ -208,6 +282,7 @@ public class TempoMap
     /// </summary>
     public List<TimeSig> timeSigs;
 
+    /// <summary>Creates a tempo map and initializes its collections and default entries.</summary>
     public TempoMap() { Init(); }
 
     /// <summary>
@@ -237,30 +312,71 @@ public class TempoMap
         timeSigs.Sort((a, b) => { return a?.timing.CompareTo(b?.timing) ?? 1; });
     }
 
+    /// <summary>
+    /// Add a tempo entry by bpm and timing values.
+    /// </summary>
+    /// <param name="bpm">Beats per minute to add.</param>
+    /// <param name="timing">Timing (seconds) at which the tempo becomes effective.</param>
     public void AddTempo(float bpm, double timing) =>
       AddTempo(new Tempo() { bpm = bpm, timing = timing });
+
+    /// <summary>
+    /// Add a Tempo object to the tempo map and reinitialize internal state.
+    /// </summary>
+    /// <param name="tempo">Tempo instance to add.</param>
     public void AddTempo(Tempo tempo)
     {
         tempos.Add(tempo);
         Init();
     }
+
+    /// <summary>
+    /// Remove the tempo effective at the specified time.
+    /// </summary>
+    /// <param name="time">Time in seconds used to locate the tempo to remove.</param>
     public void RemoveTempo(double time) =>
         RemoveTempo(GetTempo(time));
+
+    /// <summary>
+    /// Remove the specified Tempo instance from the map and reinitialize.
+    /// </summary>
+    /// <param name="tempo">Tempo instance to remove.</param>
     public void RemoveTempo(Tempo tempo)
     {
         tempos.Remove(tempo);
         Init();
     }
 
+    /// <summary>
+    /// Add a time signature entry using numeric values.
+    /// </summary>
+    /// <param name="beats">Numerator (beats per measure).</param>
+    /// <param name="note">Denominator note value (e.g., 4 for quarter notes).</param>
+    /// <param name="timing">Timing (seconds) at which the time signature becomes effective.</param>
     public void AddTimeSig(int beats, int note, double timing) =>
         AddTimeSig(new TimeSig() { beats = beats, note = note, timing = timing });
+
+    /// <summary>
+    /// Add a TimeSig instance to the map and reinitialize internal state.
+    /// </summary>
+    /// <param name="timeSig">TimeSig instance to add.</param>
     public void AddTimeSig(TimeSig timeSig)
     {
         timeSigs.Add(timeSig);
         Init();
     }
+
+    /// <summary>
+    /// Remove the time signature effective at the given time.
+    /// </summary>
+    /// <param name="time">Time in seconds used to locate the time signature to remove.</param>
     public void RemoveTimeSig(double time) =>
        RemoveTimeSig(GetTimeSigs(time)?[0]);
+
+    /// <summary>
+    /// Remove the specified TimeSig instance and reinitialize.
+    /// </summary>
+    /// <param name="tempo">TimeSig instance to remove.</param>
     public void RemoveTimeSig(TimeSig tempo)
     {
         timeSigs.Remove(tempo);
@@ -270,6 +386,8 @@ public class TempoMap
     /// <summary>
     /// Get the most-recent tempo effective at the specified time.
     /// </summary>
+    /// <param name="noteTime">Time in seconds to query.</param>
+    /// <returns>The effective tempo entry, or null when the tempo map is empty.</returns>
     public Tempo GetTempo(double noteTime)
     {
         if(tempos.Count == 0) return null;
@@ -277,6 +395,11 @@ public class TempoMap
         try { return tempos.Last(t => t.timing <= noteTime); }
         catch { return tempos[0]; }
     }
+    /// <summary>
+    /// Get all tempo entries that have the same timing as the tempo effective at the specified time.
+    /// </summary>
+    /// <param name="noteTime">Time in seconds to query.</param>
+    /// <returns>List of Tempo entries matching the effective timing.</returns>
     public List<Tempo> GetTempos(double noteTime)
     {
         if(tempos.Count == 0) return new List<Tempo>() { };
@@ -287,6 +410,11 @@ public class TempoMap
         catch { return new List<Tempo>() { }; }
     }
 
+    /// <summary>
+    /// Get the most recent TimeSig effective at the specified time.
+    /// </summary>
+    /// <param name="noteTime">Time in seconds to query.</param>
+    /// <returns>The TimeSig effective at the time, or null if none exist.</returns>
     public TimeSig GetTimeSig(double noteTime)
     {
         if(timeSigs.Count == 0) return null;
@@ -295,6 +423,12 @@ public class TempoMap
         catch { return timeSigs[0]; }
 
     }
+
+    /// <summary>
+    /// Get all TimeSig entries that share the same timing as the effective TimeSig at the specified time.
+    /// </summary>
+    /// <param name="noteTime">Time in seconds to query.</param>
+    /// <returns>List of TimeSig entries matching the effective timing.</returns>
     public List<TimeSig> GetTimeSigs(double noteTime)
     {
         if(timeSigs.Count == 0) return null;
@@ -304,12 +438,20 @@ public class TempoMap
         catch { return null; }
     }
 
+    /// <summary>
+    /// Clear all tempo and time signature entries and reinitialize the map.
+    /// </summary>
     public void Clear()
     {
         tempos.Clear();
         timeSigs.Clear();
         Init();
     }
+
+    /// <summary>
+    /// Create a deep-ish clone of the TempoMap including cloned Tempo and TimeSig entries.
+    /// </summary>
+    /// <returns>A cloned TempoMap instance.</returns>
     public TempoMap Clone() =>
         new TempoMap()
         {

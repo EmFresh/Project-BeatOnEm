@@ -1,3 +1,8 @@
+/*
+ File: MapEditingControls.cs
+ Brief: Handles input and editing controls used by the map editor (selection, deletion, navigation, etc.).
+*/
+
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;

@@ -1,3 +1,7 @@
+/*
+ File: EnemyActions.cs
+ Brief: Implements enemy behavior logic including hit windows, visualizers and scoring callbacks.
+*/
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -48,15 +52,19 @@ public partial class EnemyActions : MonoBehaviour
     [AutoStaticsCleanup] private static List<EnemyActions> AllActionsList { get; } = new List<EnemyActions>();
 
 
+    /// <summary>Gets the active EnemyActions components tracked by the static registry.</summary>
+    /// <returns>The shared list of active enemy action components.</returns>
     public static List<EnemyActions> GetAllActions() => AllActionsList;
 
     // Awake is called only once before Start
 
+    /// <summary>Adds this component to the active enemy action registry.</summary>
     void Awake()
     {
         AllActionsList.Add(this);
     }
 
+    /// <summary>Removes this component from the active enemy action registry.</summary>
     private void OnDestroy()
     {
         AllActionsList.Remove(this);
@@ -67,9 +75,11 @@ public partial class EnemyActions : MonoBehaviour
     //2 3 4
     // 5 6
 
+    /// <summary>Index of the next note entry to evaluate.</summary>
     private int last = 0;
     //public DateTime timer = DateTime.MinValue;
     //public AudioSource clip;
+    /// <summary>Evaluates upcoming note timings and starts their hit-target animations.</summary>
     void NoteUpdate()
     {
         var timings = noteData.Select(v => v.hitTiming).ToList();
@@ -142,6 +152,12 @@ public partial class EnemyActions : MonoBehaviour
             StartCoroutine(OnEnemyEnd(hitWindow * 3f));
     }
 
+    /// <summary>Displays and animates a hit target for the specified note timing.</summary>
+    /// <param name="timing">Target note time in seconds.</param>
+    /// <param name="window">Valid hit window in seconds.</param>
+    /// <param name="visualizer">Visualizer providing the target location.</param>
+    /// <param name="location">Index of the target point in the visualizer.</param>
+    /// <returns>A coroutine enumerator for the target animation and cleanup.</returns>
     IEnumerator AnimateMeleeTarget(double timing, float window, HitLocationVisualizer visualizer, int location)
     {
         var parent = visualizer.parent ? visualizer.parent : visualizer.transform;
@@ -196,6 +212,9 @@ public partial class EnemyActions : MonoBehaviour
             return false;
         });
 
+        /// <summary>Waits for the requested delay, removes the animated target, and disables its callback when appropriate.</summary>
+        /// <param name="time">Delay in seconds before cleanup.</param>
+        /// <returns>A coroutine enumerator for target cleanup.</returns>
         IEnumerator Cleanup(float time = 0)
         {
             yield return new WaitForSeconds(time);
@@ -207,6 +226,10 @@ public partial class EnemyActions : MonoBehaviour
         yield break;
     }
 
+    /// <summary>Runs the enemy attack animation for the specified note time and hit window.</summary>
+    /// <param name="timing">Target note time in seconds.</param>
+    /// <param name="window">Valid hit window in seconds.</param>
+    /// <returns>A coroutine enumerator for the attack animation.</returns>
     IEnumerator AnimateEnemyAttack(float timing, float window)
     {
         var tmp = GetComponentInChildren<Renderer>().material.color;
@@ -232,6 +255,9 @@ public partial class EnemyActions : MonoBehaviour
     }
 
 
+    /// <summary>Waits for the remaining reaction period and ends this enemy's active behavior.</summary>
+    /// <param name="react">Delay in seconds before the enemy ends.</param>
+    /// <returns>A coroutine enumerator for the end delay.</returns>
     private IEnumerator OnEnemyEnd(float react)
     {
         yield return new WaitForSeconds(react);
@@ -240,6 +266,7 @@ public partial class EnemyActions : MonoBehaviour
     }
 
     // Update is called once per frame
+    /// <summary>Updates enemy note behavior while the associated song is playing.</summary>
     void Update()
     {
         //if(timer == DateTime.MinValue)

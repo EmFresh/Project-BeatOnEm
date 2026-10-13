@@ -1,3 +1,9 @@
+/*
+ File: TempoMarkManager.cs
+ Brief: Manages beat/tempo markers displayed in the map editor timeline. Creates and positions marker GameObjects
+ according to the audio timeline and tempo map.
+*/
+
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -228,6 +234,7 @@ public class TempoMarkManager : MonoBehaviour
 
     }
 
+    /// <summary>Initializes marker orientation and builds the initial timeline marker set.</summary>
     private void Start()
     {
         rect.onValueChanged.AddListener((v) => MarkerUpdate());

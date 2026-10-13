@@ -1,3 +1,9 @@
+/*
+ File: TimelineImageCreator.cs
+ Brief: Generates timeline images and line renderers used by the map editor timeline UI. This file contains
+ helpers to create textures and line point data from audio clips and to populate UI elements.
+*/
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -19,8 +25,8 @@ using Vector2 = UnityEngine.Vector2;
 [RequireComponent(typeof(ScrollRect))]
 /// <summary>
 /// Generates timeline images and line renderers from an audio source for the map editor timeline.
-/// Creates textures and line data used to visualize audio waveforms and other timeline visuals.
-/// Placeholder summary: TODO: expand details about performance and usage.
+/// The class creates textures and point arrays that represent the audio waveform and populates
+/// UI elements (RawImage and UILineRenderer) so the timeline can be visualized.
 /// </summary>
 public class TimelineImageCreator : MonoBehaviour
 {
@@ -34,30 +40,37 @@ public class TimelineImageCreator : MonoBehaviour
     /// </summary>
     public List<RectTransform> lineRenderers = new List<RectTransform>();
 
+    /// <summary>
+    /// Cached ScrollRect component used to place generated UI elements.
+    /// </summary>
     private ScrollRect scrollRect;
 
-    List<GameObject> UIImages = new List<GameObject>();
+    /// <summary>
+    /// Pool of GameObjects used to host generated RawImage components for textures.
+    /// </summary>
+    private List<GameObject> UIImages = new List<GameObject>();
 
     /// <summary>
-    /// Initialize component on awake. Ensures a ScrollRect reference exists.
+    /// Awake is called when the script instance is being loaded. Caches the ScrollRect
+    /// component required to add generated UI elements into the hierarchy.
     /// </summary>
-    /// <remarks>Awake is used to cache commonly-used components.</remarks>
     private void Awake()
     {
         scrollRect = GetComponent<ScrollRect>();
         // UpdateImageUIAsync(false);
     }
 
-
     /// <summary>
     /// Rebuilds the image UI for the timeline asynchronously and assigns textures to the ScrollRect content.
     /// </summary>
-    /// <param name="async">Whether to perform work asynchronously.</param>
+    /// <param name="async">Whether to perform work asynchronously. If true the image creation may yield to
+    /// the Unity scheduler during long-running work.</param>
     public async void UpdateImageUIAsync(bool async = true)
     {
         scrollRect.normalizedPosition = Vector2.zero;
         AddTextureToUI(await CreateImagesAsync(w: 100, h: 500, vertical: true, editManager.AudioSource.clip.length / 80, async), parent: scrollRect.content);
     }
+
     /// <summary>
     /// Rebuilds the line renderer UI elements asynchronously and places them into the configured parents.
     /// </summary>
@@ -69,79 +82,90 @@ public class TimelineImageCreator : MonoBehaviour
         AddLineToUI(await CreateLineAsync(w: 1, h: editManager.AudioSource.clip.samples / editManager.AudioSource.clip.channels / 100, steps: .3f, vertical: true, async: async), maxPoints: 4000, parents: lineRenderers);
     }
 
-
-
+    /// <summary>
+    /// Returns a list of low factors (divisors) for the provided integer value.
+    /// Only factors less than the square root of the input are returned.
+    /// </summary>
+    /// <param name="value">Value to factorize.</param>
+    /// <returns>List of integer factors less than the square root of the value.</returns>
     public List<int> GetLowFactors(int value)
     {
         var factors = new List<int>();
 
         int sqrt = (int)Math.Ceiling(Math.Sqrt(value));
 
-        for(int a = 1; a < sqrt; ++a)
-            if(value % a == 0)
+        for (int a = 1; a < sqrt; ++a)
+            if (value % a == 0)
                 factors.Add(a);
-
 
         return factors;
     }
 
     /// <summary>
-    /// Returns a list of low factors (divisors) for the provided integer value.
+    /// Returns factors greater than or equal to the square root by inverting the low factors.
     /// </summary>
     /// <param name="value">Value to factorize.</param>
-    /// <returns>List of integer factors less than the square root of the value.</returns>
-
+    /// <returns>List of integer factors greater than or equal to the square root of the value.</returns>
     public List<int> GetHighFactors(int value)
     {
         var low = GetLowFactors(value);
         var factors = new List<int>();
         low.Reverse();
 
-        foreach(var factor in low)
+        foreach (var factor in low)
             factors.Add(value / factor);
 
         return factors;
     }
 
+    /// <summary>
+    /// Returns all factors of the specified value by combining low and high factors.
+    /// </summary>
+    /// <param name="value">Value to factorize.</param>
+    /// <returns>List of all integer factors for the value.</returns>
     public List<int> GetAllFactors(int value)
     {
         var low = GetLowFactors(value);
         var factors = new List<int>(low);
         low.Reverse();
 
-        foreach(var factor in low)
+        foreach (var factor in low)
             factors.Add(value / factor);
-
 
         return factors;
     }
 
-
-
-    void AddLineToUI(IEnumerable<Vector2>[] points, List<RectTransform> parents, int maxPoints = 4000)
+    /// <summary>
+    /// Adds line renderer GameObjects to the provided parent RectTransforms using the provided
+    /// point arrays. Each element in <paramref name="points"/> corresponds to a parent in <paramref name="parents"/>.
+    /// </summary>
+    /// <param name="points">Array of enumerable point collections representing line points for each parent.</param>
+    /// <param name="parents">List of RectTransform parents to attach generated UILineRenderer objects to.</param>
+    /// <param name="maxPoints">Maximum number of points allowed per generated renderer; reduces detail if necessary.</param>
+    private void AddLineToUI(IEnumerable<Vector2>[] points, List<RectTransform> parents, int maxPoints = 4000)
     {
         int a = 0;
         Color[] colors = new Color[] { Color.darkOliveGreen, Color.rebeccaPurple, Color.blue, Color.yellow, Color.cyan, Color.magenta };
-        //set parent of images
-        foreach(var parent in parents)
+        // set parent of images
+        foreach (var parent in parents)
         {
             var pointlist = points[a].ToList();
             var factor = GetAllFactors(pointlist.Count).Last(p => a <= maxPoints);
             var div = pointlist.Count / factor;
 
-            while(pointlist.Count / div > maxPoints)
+            while (pointlist.Count / div > maxPoints)
                 div *= 2;
 
             var divAmount = Mathf.CeilToInt((float)pointlist.Count / div);
 
-            for(int divCount = 0; divCount < pointlist.Count; divCount += divAmount)
+            for (int divCount = 0; divCount < pointlist.Count; divCount += divAmount)
             {
                 var rendererObj = new GameObject($"Renderer {divCount / divAmount + 1}", typeof(UILineRenderer));
                 var renderer = rendererObj.GetComponent<UILineRenderer>();
                 rendererObj.transform.SetParent(parent, false);
 
                 int b = 0;
-                if(points.Count() > 0)
+                if (points.Count() > 0)
                 {
                     renderer.color = colors[a % colors.Length];
                     renderer.Points = new Vector2[Mathf.Clamp(pointlist.Count - divCount, 0, divAmount) + (divCount > 0 ? 1 : 0)];
@@ -154,7 +178,7 @@ public class TimelineImageCreator : MonoBehaviour
                     renderer.canvasRenderer.cull = false;
                     // renderer.canvasRenderer.EnableRectClipping(GetComponentInParent<ScrollRect>().GetComponent<RectTransform>().rect);
 
-                    for(b = 0; b < renderer.Points.Length; ++b)
+                    for (b = 0; b < renderer.Points.Length; ++b)
                     {
                         var refPoint = pointlist[b + divCount - (divCount > 0 ? 1 : 0)];
                         renderer.Points[b] = refPoint;
@@ -173,13 +197,19 @@ public class TimelineImageCreator : MonoBehaviour
         }
     }
 
-    void AddTextureToUI<T>(IEnumerable<T> images, RectTransform parent) where T : Texture
+    /// <summary>
+    /// Adds textures as RawImage children of the configured ScrollRect content.
+    /// </summary>
+    /// <typeparam name="T">Texture type (e.g., Texture2D).</typeparam>
+    /// <param name="images">Enumerable of textures to add to the UI.</param>
+    /// <param name="parent">Parent RectTransform under which new or pooled images will be placed.</param>
+    private void AddTextureToUI<T>(IEnumerable<T> images, RectTransform parent) where T : Texture
     {
         int a = 0;
-        //set parent of images
-        foreach(var image in images)
+        // set parent of images
+        foreach (var image in images)
         {
-            if(a >= UIImages.Count)
+            if (a >= UIImages.Count)
                 UIImages.Add(new GameObject($"Image {a + 1}", typeof(RawImage)));
 
             UIImages[a].transform.SetParent(scrollRect.content, false);
@@ -188,21 +218,20 @@ public class TimelineImageCreator : MonoBehaviour
             ++a;
         }
 
-        //remove unused images
+        // remove unused imag
         for(int b = a; b < UIImages.Count; ++b)
             Destroy(UIImages[b]);
 
     }
 
-    /// <summary>
-    /// CReate an array of RawImage GameObjects that contain sections of audio
-    /// </summary>
-    /// <param name="w"></param>
-    /// <param name="h"></param>
-    /// <param name="vertical"></param>
-    /// <param name="audioLengthPerImage"></param>
-    /// <returns></returns>
-    /// <exception cref="NullReferenceException"></exception>
+    /// <summary>Creates waveform textures for successive portions of the attached audio clip.</summary>
+    /// <param name="w">Texture width, or the waveform width when generated horizontally.</param>
+    /// <param name="h">Texture height, or the waveform height when generated horizontally.</param>
+    /// <param name="vertical">Whether the waveform is laid out vertically.</param>
+    /// <param name="audioLengthPerImage">Audio duration represented by each texture; nonpositive values use the whole clip.</param>
+    /// <param name="async">Whether to yield once to the Unity scheduler before generating textures.</param>
+    /// <returns>The generated textures in timeline order.</returns>
+    /// <exception cref="NullReferenceException">The manager, audio source, or audio clip is unavailable.</exception>
     async public Task<Texture2D[]> CreateImagesAsync(int w, int h, bool vertical = true, float audioLengthPerImage = 0, bool async = true)
     {
 
@@ -325,6 +354,14 @@ public class TimelineImageCreator : MonoBehaviour
     }
 
 
+    /// <summary>Creates normalized waveform point collections, one for each audio channel.</summary>
+    /// <param name="w">Waveform width when laid out horizontally.</param>
+    /// <param name="h">Waveform height when laid out vertically.</param>
+    /// <param name="vertical">Whether the waveform points are laid out vertically.</param>
+    /// <param name="steps">Sampling interval multiplier used to select waveform values.</param>
+    /// <param name="async">Whether to yield once to the Unity scheduler before generating points.</param>
+    /// <returns>Point collections for each audio channel.</returns>
+    /// <exception cref="NullReferenceException">The manager, audio source, or audio clip is unavailable.</exception>
     async public Task<HashSet<Vector2>[]> CreateLineAsync(int w, int h, bool vertical = true, float steps = .5f, bool async = true)
     {
 

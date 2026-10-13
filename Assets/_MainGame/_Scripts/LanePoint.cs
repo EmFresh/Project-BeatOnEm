@@ -1,3 +1,7 @@
+/* 
+ File: LanePoint.cs
+ Brief: Represents a spawn lane point used to position enemies/notes in the scene.
+*/
 using UnityEngine;
 
 /// <summary>

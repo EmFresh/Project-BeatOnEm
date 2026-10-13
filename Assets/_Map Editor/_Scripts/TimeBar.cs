@@ -1,3 +1,7 @@
+/* File: TimeBar.cs
+   Brief: Visual time bar used by the map editor to indicate and control time ranges within the timeline.
+*/
+
 using UnityEngine;
 
 using System;
@@ -42,15 +46,21 @@ public class TimeBar : MonoBehaviour
     /// </summary>
     public UnityEvent<double> onTimeBarMoved = new UnityEvent<double>();
 
+    /// <summary>Gets or sets timeline orientation and updates the bar layout when changed.</summary>
     bool Vertical { get => m_vertical; set { SetBarOrientation(m_vertical = value, m_thickness); } }
+    /// <summary>Gets or sets the bar thickness and updates the bar layout when changed.</summary>
     float Thickness { get => m_thickness; set { SetBarOrientation(m_vertical, m_thickness = value); } }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
+    /// <summary>Sets the initial time bar orientation and thickness.</summary>
     void Awake()
     {
         SetBarOrientation(m_vertical, m_thickness);
     }
 
+    /// <summary>Applies the requested orientation and thickness to the time bar transform.</summary>
+    /// <param name="vertical">Whether the timeline is vertical.</param>
+    /// <param name="barThickness">Time bar thickness in pixels.</param>
     public void SetBarOrientation(bool vertical, float barThickness)
     {
         m_timeBarTrans.anchorMin = new Vector2(vertical ? 0 : .5f, vertical ? .5f : 0);
@@ -64,6 +74,7 @@ public class TimeBar : MonoBehaviour
     }
 
     // Update is called once per frame
+    /// <summary>Updates the time bar from audio playback and applies follow behavior when enabled.</summary>
     void Update()
     {
         if(!mapEditManager.timelineImageCreator) throw new NullReferenceException("Timeline Creater was not set");
@@ -76,6 +87,8 @@ public class TimeBar : MonoBehaviour
         m_timeBarTrans.transform.SetAsLastSibling();
     }
 
+    /// <summary>Scrolls the timeline as needed to keep the specified time near its follow position.</summary>
+    /// <param name="time">Audio time in seconds to follow.</param>
     public void Fallow(double time)
 
     {
@@ -91,6 +104,11 @@ public class TimeBar : MonoBehaviour
 
 
         var tmpPos = (m_vertical ? scrollPos.y : scrollPos.x);
+        /// <summary>Determines whether a value falls within an inclusive numeric interval.</summary>
+        /// <param name="val">Value to test.</param>
+        /// <param name="min">Inclusive lower bound.</param>
+        /// <param name="max">Inclusive upper bound.</param>
+        /// <returns><see langword="true"/> when the value is within the bounds; otherwise, <see langword="false"/>.</returns>
         bool InRange(double val, double min, double max) => val >= min && val <= max;
 
         float fallowPoint = .5f;
@@ -109,6 +127,9 @@ public class TimeBar : MonoBehaviour
 
     }
 
+    /// <summary>Moves the time bar to a song time and optionally scrolls to follow it.</summary>
+    /// <param name="time">Audio time in seconds.</param>
+    /// <param name="fallow">Whether to scroll the timeline to keep the bar in view.</param>
     public void SetLocation(double time, bool fallow = false)
     {
         var source = mapEditManager.AudioSource;

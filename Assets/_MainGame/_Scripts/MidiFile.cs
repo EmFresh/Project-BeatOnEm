@@ -1,10 +1,16 @@
-﻿namespace MidiParser
+﻿/*
+ File: MidiFile.cs
+ Brief: A lightweight MIDI file parser included in the project to extract tracks, events and text/meta information.
+*/
+
+namespace MidiParser
 {
 	using System;
 	using System.Collections.Generic;
 	using System.IO;
 	using System.Text;
 
+	/// <summary>Parses standard MIDI file headers and exposes their tracks and timing metadata.</summary>
 	public class MidiFile
 	{
 		/// <summary>
@@ -12,20 +18,32 @@
 		/// </summary>
 		public readonly int Format;
 
+		/// <summary>Gets the number of ticks that represent one quarter note.</summary>
 		public readonly int TicksPerQuarterNote;
 
+		/// <summary>Gets the parsed tracks in the MIDI file.</summary>
 		public readonly MidiTrack[] Tracks;
 
+		/// <summary>Gets the number of tracks declared by the MIDI file.</summary>
 		public readonly int TracksCount;
 
+		/// <summary>Reads and parses a MIDI file from a stream.</summary>
+		/// <param name="stream">Stream containing the MIDI file bytes.</param>
+		/// <exception cref="FormatException">The stream does not contain a supported standard MIDI file.</exception>
 		public MidiFile(Stream stream)
 			: this(Reader.ReadAllBytesFromStream(stream))
 		{ }
 
+		/// <summary>Reads and parses a MIDI file from a path.</summary>
+		/// <param name="path">Path to the MIDI file.</param>
+		/// <exception cref="FormatException">The file does not contain a supported standard MIDI file.</exception>
 		public MidiFile(string path)
 			: this(File.ReadAllBytes(path))
 		{ }
 
+		/// <summary>Parses MIDI header and track data from a byte array.</summary>
+		/// <param name="data">Complete standard MIDI file data.</param>
+		/// <exception cref="FormatException">The header is invalid or uses unsupported SMPTE timing.</exception>
 		public MidiFile(byte[] data)
 		{
 			var position = 0;
@@ -57,6 +75,13 @@
 			}
 		}
 
+		/// <summary>Reads supported tempo, time-signature, and key-signature metadata into event arguments.</summary>
+		/// <param name="data">MIDI file data.</param>
+		/// <param name="position">Current byte offset, advanced past the event payload.</param>
+		/// <param name="metaEventType">Metadata event type.</param>
+		/// <param name="data1">First decoded metadata value.</param>
+		/// <param name="data2">Second decoded metadata value.</param>
+		/// <returns><see langword="true"/> when the metadata type is supported; otherwise, <see langword="false"/>.</returns>
 		private static bool ParseMetaEvent(
 			byte[] data,
 			ref int position,
@@ -92,6 +117,12 @@
 			}
 		}
 
+		/// <summary>Parses one MIDI track and advances the file offset to its end.</summary>
+		/// <param name="index">Zero-based track index.</param>
+		/// <param name="data">Complete MIDI file data.</param>
+		/// <param name="position">Current byte offset, advanced through the track.</param>
+		/// <returns>The parsed track and its MIDI and text events.</returns>
+		/// <exception cref="FormatException">The track header is invalid.</exception>
 		private static MidiTrack ParseTrack(int index, byte[] data, ref int position)
 		{
 			if(Reader.ReadString(data, ref position, 4) != "MTrk")
@@ -191,23 +222,39 @@
 			return track;
 		}
 
+		/// <summary>Provides low-level readers for MIDI binary values and strings.</summary>
 		private static class Reader
 		{
+			/// <summary>Reads a big-endian 16-bit integer and advances the offset.</summary>
+			/// <param name="data">Source byte array.</param>
+			/// <param name="i">Byte offset to read and advance.</param>
+			/// <returns>The decoded integer.</returns>
 			public static int Read16(byte[] data, ref int i)
 			{
 				return (data[i++] << 8) | data[i++];
 			}
 
+			/// <summary>Reads a big-endian 32-bit integer and advances the offset.</summary>
+			/// <param name="data">Source byte array.</param>
+			/// <param name="i">Byte offset to read and advance.</param>
+			/// <returns>The decoded integer.</returns>
 			public static int Read32(byte[] data, ref int i)
 			{
 				return (data[i++] << 24) | (data[i++] << 16) | (data[i++] << 8) | data[i++];
 			}
 
+			/// <summary>Reads one byte and advances the offset.</summary>
+			/// <param name="data">Source byte array.</param>
+			/// <param name="i">Byte offset to read and advance.</param>
+			/// <returns>The byte at the specified offset.</returns>
 			public static byte Read8(byte[] data, ref int i)
 			{
 				return data[i++];
 			}
 
+			/// <summary>Reads all remaining bytes from a stream.</summary>
+			/// <param name="input">Stream to consume.</param>
+			/// <returns>Bytes read from the stream.</returns>
 			public static byte[] ReadAllBytesFromStream(Stream input)
 			{
 				var buffer = new byte[16 * 1024];
@@ -223,6 +270,11 @@
 				}
 			}
 
+			/// <summary>Reads an ASCII string of the specified length and advances the offset.</summary>
+			/// <param name="data">Source byte array.</param>
+			/// <param name="i">Byte offset to read and advance.</param>
+			/// <param name="length">Number of bytes to decode.</param>
+			/// <returns>The decoded string.</returns>
 			public static string ReadString(byte[] data, ref int i, int length)
 			{
 				var result = Encoding.ASCII.GetString(data, i, length);
@@ -230,6 +282,10 @@
 				return result;
 			}
 
+			/// <summary>Reads a MIDI variable-length integer and advances the offset.</summary>
+			/// <param name="data">Source byte array.</param>
+			/// <param name="i">Byte offset to read and advance.</param>
+			/// <returns>The decoded integer.</returns>
 			public static int ReadVarInt(byte[] data, ref int i)
 			{
 				var result = (int)data[i++];
@@ -258,102 +314,148 @@
 		}
 	}
 
+	/// <summary>Stores channel events and text events parsed from one MIDI track.</summary>
 	public class MidiTrack
 	{
+		/// <summary>Gets or sets the zero-based track index.</summary>
 		public int Index;
 
+		/// <summary>Gets or sets channel and supported metadata events in this track.</summary>
 		public List<MidiEvent> MidiEvents = new List<MidiEvent>();
 
+		/// <summary>Gets or sets text metadata events in this track.</summary>
 		public List<TextEvent> TextEvents = new List<TextEvent>();
 	}
 
+	/// <summary>Represents a parsed channel or supported metadata event.</summary>
 	public struct MidiEvent
 	{
+		/// <summary>Gets or sets the event time in MIDI ticks.</summary>
 		public int Time;
 
+		/// <summary>Gets or sets the raw MIDI event status type.</summary>
 		public byte Type;
 
+		/// <summary>Gets or sets the first event argument (channel or metadata type).</summary>
 		public byte Arg1;
 
+		/// <summary>Gets or sets the second event argument.</summary>
 		public byte Arg2;
 
+		/// <summary>Gets or sets the third event argument.</summary>
 		public byte Arg3;
 
+		/// <summary>Gets the event type as a <see cref="MidiEventType"/> value.</summary>
 		public MidiEventType MidiEventType => (MidiEventType)this.Type;
 
+		/// <summary>Gets the metadata type for a metadata event.</summary>
 		public MetaEventType MetaEventType => (MetaEventType)this.Arg1;
 
+		/// <summary>Gets the one-based MIDI channel.</summary>
 		public int Channel => this.Arg1;
 
+		/// <summary>Gets the note number for note events.</summary>
 		public int Note => this.Arg2;
 
+		/// <summary>Gets the velocity for note events.</summary>
 		public int Velocity => this.Arg3;
 
+		/// <summary>Gets the control-change type for controller events.</summary>
 		public ControlChangeType ControlChangeType => (ControlChangeType)this.Arg2;
 
+		/// <summary>Gets the controller value or third event argument.</summary>
 		public int Value => this.Arg3;
 	}
 
+	/// <summary>Represents text metadata extracted from a MIDI track.</summary>
 	public struct TextEvent
 	{
+		/// <summary>Gets or sets the event time in MIDI ticks.</summary>
 		public int Time;
 
+		/// <summary>Gets or sets the raw text event type.</summary>
 		public byte Type;
 
+		/// <summary>Gets or sets the decoded text value.</summary>
 		public string Value;
 
+		/// <summary>Gets the text event type as a <see cref="TextEventType"/> value.</summary>
 		public TextEventType TextEventType => (TextEventType)this.Type;
 	}
 
+	/// <summary>Defines the channel and metadata event status types recognized by the parser.</summary>
 	public enum MidiEventType : byte
 	{
+		/// <summary>Note-off channel event.</summary>
 		NoteOff = 0x80,
 
+		/// <summary>Note-on channel event.</summary>
 		NoteOn = 0x90,
 
+		/// <summary>Key aftertouch channel event.</summary>
 		KeyAfterTouch = 0xA0,
 
+		/// <summary>Control-change channel event.</summary>
 		ControlChange = 0xB0,
 
+		/// <summary>Program-change channel event.</summary>
 		ProgramChange = 0xC0,
 
+		/// <summary>Channel aftertouch channel event.</summary>
 		ChannelAfterTouch = 0xD0,
 
+		/// <summary>Pitch-bend channel event.</summary>
 		PitchBendChange = 0xE0,
 
+		/// <summary>MIDI metadata event.</summary>
 		MetaEvent = 0xFF
 	}
 
+	/// <summary>Defines recognized MIDI control-change controller numbers.</summary>
 	public enum ControlChangeType : byte
 	{
+		/// <summary>Bank select controller.</summary>
 		BankSelect = 0x00,
 
+		/// <summary>Modulation controller.</summary>
 		Modulation = 0x01,
 
+		/// <summary>Volume controller.</summary>
 		Volume = 0x07,
 
+		/// <summary>Balance controller.</summary>
 		Balance = 0x08,
 
+		/// <summary>Pan controller.</summary>
 		Pan = 0x0A,
 
+		/// <summary>Sustain controller.</summary>
 		Sustain = 0x40
 	}
 
+	/// <summary>Defines the text metadata event types recognized by the parser.</summary>
 	public enum TextEventType : byte
 	{
+		/// <summary>General text event.</summary>
 		Text = 0x01,
 
+		/// <summary>Track-name event.</summary>
 		TrackName = 0x03,
 
+		/// <summary>Lyric event.</summary>
 		Lyric = 0x05,
 	}
 
+	/// <summary>Defines tempo, time-signature, and key-signature MIDI metadata event types.</summary>
 	public enum MetaEventType : byte
 	{
+		/// <summary>Tempo metadata event.</summary>
 		Tempo = 0x51,
 
+		/// <summary>Time-signature metadata event.</summary>
 		TimeSignature = 0x58,
 
+		/// <summary>Key-signature metadata event.</summary>
 		KeySignature = 0x59
 	}
 }

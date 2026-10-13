@@ -1,5 +1,10 @@
+/*
+ File: NoteEditorPlacer.cs
+ Brief: Editor helper component to place notes into the active SongTrack at the current seek time.
+*/
 using UnityEngine;
 
+/// <summary>Provides editor controls for placing note-related data at the current playhead time.</summary>
 public class NoteEditorPlacer : MonoBehaviour
 {
 

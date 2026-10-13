@@ -1,3 +1,8 @@
+/*
+ File: TempoMark.cs
+ Brief: Represents a single tempo marker instance used by the editor timeline.
+*/
+
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
