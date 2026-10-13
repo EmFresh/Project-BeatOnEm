@@ -17,65 +17,100 @@ using static UnityEngine.Rendering.DebugUI.Table;
 using Vector2 = UnityEngine.Vector2;
 
 [RequireComponent(typeof(ScrollRect))]
+/// <summary>
+/// Generates timeline images and line renderers from an audio source for the map editor timeline.
+/// Creates textures and line data used to visualize audio waveforms and other timeline visuals.
+/// Placeholder summary: TODO: expand details about performance and usage.
+/// </summary>
 public class TimelineImageCreator : MonoBehaviour
 {
-    //public AudioClip clip;
-
+    /// <summary>
+    /// Reference to the MapEditManager providing the audio source and related data.
+    /// </summary>
     public MapEditManager editManager;
+
+    /// <summary>
+    /// RectTransforms that will receive generated line renderers for waveform visualization.
+    /// </summary>
     public List<RectTransform> lineRenderers = new List<RectTransform>();
 
     private ScrollRect scrollRect;
 
     List<GameObject> UIImages = new List<GameObject>();
+
+    /// <summary>
+    /// Initialize component on awake. Ensures a ScrollRect reference exists.
+    /// </summary>
+    /// <remarks>Awake is used to cache commonly-used components.</remarks>
     private void Awake()
     {
         scrollRect = GetComponent<ScrollRect>();
-        UpdateImageUIAsync(false);
+        // UpdateImageUIAsync(false);
     }
 
-    async void UpdateImageUIAsync(bool async = true)
+
+    /// <summary>
+    /// Rebuilds the image UI for the timeline asynchronously and assigns textures to the ScrollRect content.
+    /// </summary>
+    /// <param name="async">Whether to perform work asynchronously.</param>
+    public async void UpdateImageUIAsync(bool async = true)
     {
         scrollRect.normalizedPosition = Vector2.zero;
-        // AddTextureToUI(await CreateImagesAsync(w: 100, h: 500, vertical: true, editManager.AudioSource.clip.length / 80, async), parent: scrollRect.content);
+        AddTextureToUI(await CreateImagesAsync(w: 100, h: 500, vertical: true, editManager.AudioSource.clip.length / 80, async), parent: scrollRect.content);
+    }
+    /// <summary>
+    /// Rebuilds the line renderer UI elements asynchronously and places them into the configured parents.
+    /// </summary>
+    /// <param name="async">Whether to perform work asynchronously.</param>
+    public async void UpdateLineUIAsync(bool async = true)
+    {
+        scrollRect = GetComponent<ScrollRect>();
+        scrollRect.normalizedPosition = Vector2.zero;
         AddLineToUI(await CreateLineAsync(w: 1, h: editManager.AudioSource.clip.samples / editManager.AudioSource.clip.channels / 100, steps: .3f, vertical: true, async: async), maxPoints: 4000, parents: lineRenderers);
     }
 
 
 
-    public List<int> GetLowFactors(int numberToCheck)
+    public List<int> GetLowFactors(int value)
     {
         var factors = new List<int>();
 
-        int sqrt = (int)Math.Ceiling(Math.Sqrt(numberToCheck));
+        int sqrt = (int)Math.Ceiling(Math.Sqrt(value));
 
         for(int a = 1; a < sqrt; ++a)
-            if(numberToCheck % a == 0)
+            if(value % a == 0)
                 factors.Add(a);
 
 
         return factors;
     }
 
-    public List<int> GetHighFactors(int numberToCheck)
+    /// <summary>
+    /// Returns a list of low factors (divisors) for the provided integer value.
+    /// </summary>
+    /// <param name="value">Value to factorize.</param>
+    /// <returns>List of integer factors less than the square root of the value.</returns>
+
+    public List<int> GetHighFactors(int value)
     {
-        var low = GetLowFactors(numberToCheck);
+        var low = GetLowFactors(value);
         var factors = new List<int>();
         low.Reverse();
 
         foreach(var factor in low)
-            factors.Add(numberToCheck / factor);
+            factors.Add(value / factor);
 
         return factors;
     }
 
-    public List<int> GetAllFactors(int numberToCheck)
+    public List<int> GetAllFactors(int value)
     {
-        var low = GetLowFactors(numberToCheck);
+        var low = GetLowFactors(value);
         var factors = new List<int>(low);
         low.Reverse();
 
         foreach(var factor in low)
-            factors.Add(numberToCheck / factor);
+            factors.Add(value / factor);
 
 
         return factors;

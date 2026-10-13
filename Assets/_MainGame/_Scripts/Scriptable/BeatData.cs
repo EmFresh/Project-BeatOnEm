@@ -31,6 +31,10 @@ public enum HitType : int
     IMAGE,
 }
 
+/// <summary>
+/// Represents a single note/enemy hit entry including location, timing and hit type.
+/// </summary>
+
 [Serializable]
 [MessagePackObject(true, AllowPrivate = true)]
 public struct NoteData
@@ -56,8 +60,13 @@ public struct NoteData
     public NoteData Clone() => new NoteData() { hitLocation = hitLocation, hitTiming = hitTiming, hitType = hitType };
 }
 
+
 [Serializable]
 [MessagePackObject(true, AllowPrivate = true)]
+/// <summary>
+/// Represents a grouped set of NoteData that defines a section of the song (a beat/enemy spawn group).
+/// Contains spawn metadata, hit data list and timing information used by spawning and gameplay systems.
+/// </summary>
 public partial class BeatData
 {
 

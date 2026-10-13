@@ -1,5 +1,8 @@
 using UnityEngine;
 
+/// <summary>
+/// Controls enemy movement interpolation from spawn to target lane over a time window.
+/// </summary>
 public class EnemyControl : MonoBehaviour
 {
     WorldControl worldControl;

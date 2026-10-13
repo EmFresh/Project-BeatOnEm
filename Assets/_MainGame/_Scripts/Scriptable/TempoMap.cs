@@ -9,22 +9,31 @@ using UnityEngine;
 
 public static class AudioExtentions
 {
-
+    /// <summary>
+    /// Helper extensions to obtain accurate time and length values (in seconds or milliseconds)
+    /// from Unity AudioSource/AudioClip using sample counts and frequency.
+    /// </summary>
     public static double AccurateTime(this AudioSource source) =>
-        ((double)source.timeSamples / source.clip.frequency);
-    public static int TimeMilli(this AudioSource source) =>
+        source.clip == null ? 0 : ((double)source.timeSamples / source.clip.frequency);
+    public static int AccurateTimeMilli(this AudioSource source) =>
         (int)(source.AccurateTime() * 1000);
+
     public static int SetAccurateTime(this AudioSource source, double time) =>
-        source.timeSamples = (int)(time * source.clip.frequency);
+        source.timeSamples = source.clip == null ? 0 : (int)(time * source.clip.frequency);
+    public static int SetAccurateTimeMilli(this AudioSource source, int time) =>
+        source.timeSamples = source.clip == null ? 0 : (int)(time * source.clip.frequency / 1000d);
 
     public static double AccurateLength(this AudioClip clip) =>
-        ((double)clip.samples / clip.frequency);
-    public static int LengthMilli(this AudioClip clip) =>
+        clip == null ? 0 : ((double)clip.samples / clip.frequency);
+    public static int AccurateLengthMilli(this AudioClip clip) =>
        (int)(clip.AccurateLength() * 1000);
 }
 
 [Serializable]
 [MessagePackObject(true, AllowPrivate = true)]
+/// <summary>
+/// Simple wrapper for beats-per-minute values that provides helpers for seconds and milliseconds per beat.
+/// </summary>
 public partial class BPM
 {
     public BPM(float bpm = 60) => this.bpm = bpm;
@@ -34,6 +43,9 @@ public partial class BPM
 
     public override string ToString() => bpm.ToString();
 
+    /// <summary>
+    /// Raw beats-per-minute value.
+    /// </summary>
     public float bpm;
     //1/60 = 0.0166667f
 
@@ -67,6 +79,9 @@ public partial class BPM
 
 [Serializable]
 [MessagePackObject(true, AllowPrivate = true)]
+/// <summary>
+/// Represents a tempo change at a specific time in the song and provides helpers to compute next beat timestamps.
+/// </summary>
 public class Tempo
 {
     //beats per min 
@@ -79,6 +94,9 @@ public class Tempo
     public int TimingMilli { get => (int)(timing * 1000); set => timing = value / 1000; }
 
 
+    /// <summary>
+    /// Compute the time (seconds) of the next beat after the provided note time.
+    /// </summary>
     public double GetNextBeat(double noteTime)
     {
         var currentTime = noteTime - timing;
@@ -88,6 +106,9 @@ public class Tempo
 
         return check ? (((amount + 2) * bpm.spb) + timing) : val;
     }
+    /// <summary>
+    /// Compute the time (milliseconds) of the next beat after the provided note time in milliseconds.
+    /// </summary>
     public int GetNextBeatMilli(int noteTimeMilli)
     {
         var currentTime = noteTimeMilli - TimingMilli;
@@ -112,6 +133,9 @@ public class Tempo
 
 [Serializable]
 [MessagePackObject(true, AllowPrivate = true)]
+/// <summary>
+/// Represents a time signature (beats per measure and note value) and provides beat-index helpers.
+/// </summary>
 public class TimeSig
 {
     //numerator
@@ -127,6 +151,9 @@ public class TimeSig
     public static TimeSig CommonTime { get => new TimeSig() { beats = 4, note = 4, timing = 0 }; }
 
 
+    /// <summary>
+    /// Returns the beat index (0-based) within the measure for the provided note time using the given tempo.
+    /// </summary>
     public int GetNextBeat(double noteTime, Tempo tempo)
     {
         var currentTime = noteTime - tempo.timing;
@@ -139,6 +166,9 @@ public class TimeSig
         return Mathf.FloorToInt((check ? (amount + 2) : (amount + 1)) % beatsCalc);
 
     }
+    /// <summary>
+    /// Returns the beat index (0-based) within the measure for the provided note time in milliseconds using the given tempo.
+    /// </summary>
     public int GetNextBeatMilli(int noteTimeMilli, Tempo tempo)
     {
         var currentTime = noteTimeMilli - tempo.TimingMilli;
@@ -164,13 +194,25 @@ public class TimeSig
 
 [Serializable]
 [MessagePackObject(true, AllowPrivate = true)]
+/// <summary>
+/// Container for tempo and time signature changes across a song. Provides helpers to manage and query tempo/time signature events.
+/// </summary>
 public class TempoMap
 {
+    /// <summary>
+    /// List of tempo change entries ordered by timing.
+    /// </summary>
     public List<Tempo> tempos;
+    /// <summary>
+    /// List of time signature changes ordered by timing.
+    /// </summary>
     public List<TimeSig> timeSigs;
 
     public TempoMap() { Init(); }
 
+    /// <summary>
+    /// Initialize collections with sensible defaults if empty.
+    /// </summary>
     public void Init()
     {
         if(tempos == null)
@@ -179,17 +221,20 @@ public class TempoMap
             timeSigs = new List<TimeSig>();
 
         if(tempos.Count == 0)
-            tempos.Add(new Tempo() { bpm = 80 });
+            tempos.Add(new Tempo());
         if(timeSigs.Count == 0)
             timeSigs.Add(TimeSig.CommonTime);
 
         Sort();
     }
 
+    /// <summary>
+    /// Sort the internal lists by timing values.
+    /// </summary>
     public void Sort()
     {
         tempos.Sort((a, b) => { return a?.timing.CompareTo(b?.timing) ?? 1; });
-        timeSigs.Sort((a, b) => { return a?.timing.CompareTo(b.timing) ?? 1; });
+        timeSigs.Sort((a, b) => { return a?.timing.CompareTo(b?.timing) ?? 1; });
     }
 
     public void AddTempo(float bpm, double timing) =>
@@ -197,7 +242,7 @@ public class TempoMap
     public void AddTempo(Tempo tempo)
     {
         tempos.Add(tempo);
-        Sort();
+        Init();
     }
     public void RemoveTempo(double time) =>
         RemoveTempo(GetTempo(time));
@@ -212,22 +257,34 @@ public class TempoMap
     public void AddTimeSig(TimeSig timeSig)
     {
         timeSigs.Add(timeSig);
-        Sort();
+        Init();
     }
     public void RemoveTimeSig(double time) =>
-       RemoveTimeSig(GetTimeSig(time));
+       RemoveTimeSig(GetTimeSigs(time)?[0]);
     public void RemoveTimeSig(TimeSig tempo)
     {
         timeSigs.Remove(tempo);
         Init();
     }
 
+    /// <summary>
+    /// Get the most-recent tempo effective at the specified time.
+    /// </summary>
     public Tempo GetTempo(double noteTime)
     {
         if(tempos.Count == 0) return null;
 
         try { return tempos.Last(t => t.timing <= noteTime); }
         catch { return tempos[0]; }
+    }
+    public List<Tempo> GetTempos(double noteTime)
+    {
+        if(tempos.Count == 0) return new List<Tempo>() { };
+
+        noteTime = GetTempo(noteTime).timing;
+
+        try { return tempos.Where(t => t.timing == noteTime).ToList(); }
+        catch { return new List<Tempo>() { }; }
     }
 
     public TimeSig GetTimeSig(double noteTime)
@@ -238,11 +295,20 @@ public class TempoMap
         catch { return timeSigs[0]; }
 
     }
+    public List<TimeSig> GetTimeSigs(double noteTime)
+    {
+        if(timeSigs.Count == 0) return null;
+        noteTime = GetTimeSig(noteTime).timing;
+
+        try { return timeSigs.Where(t => t.timing == noteTime).ToList(); }
+        catch { return null; }
+    }
 
     public void Clear()
     {
         tempos.Clear();
         timeSigs.Clear();
+        Init();
     }
     public TempoMap Clone() =>
         new TempoMap()

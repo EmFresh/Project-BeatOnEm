@@ -12,16 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c7f4b2e1a4b86e43bd8a282a68fcc2c, type: 3}
   m_Name: Test Song
   m_EditorClassIdentifier: 
-  songName: Numb
-  artist: Linkin Park
-  mapper: EmFresh
+  _songName: Numb
+  _artist: Linkin Park
+  _mapper: EmFresh
   enemyPrefabs:
   - {fileID: 3540646333975573228, guid: eab2784ca193ae64e9e726eebc3ab5c6, type: 3}
-  - {fileID: 3540646333975573228, guid: eab2784ca193ae64e9e726eebc3ab5c6, type: 3}
-  - {fileID: 3540646333975573228, guid: eab2784ca193ae64e9e726eebc3ab5c6, type: 3}
   notePrefabs:
-  - {fileID: 5423226073453278434, guid: fb677739e9a06d6469e9b276018812a4, type: 3}
-  - {fileID: 5423226073453278434, guid: fb677739e9a06d6469e9b276018812a4, type: 3}
   - {fileID: 5423226073453278434, guid: fb677739e9a06d6469e9b276018812a4, type: 3}
   hitLocationsList:
   - points:
@@ -32,8 +28,8 @@ MonoBehaviour:
     - {x: 1, y: 0, z: 0}
     - {x: -0.5, y: -1, z: 0}
     - {x: 0.5, y: -1, z: 0}
-    offsetPos: {x: 0, y: 0.29, z: 1}
-    offsetScale: {x: 0.5, y: 0.5, z: 1}
+    offsetPos: {x: 0, y: 0.14, z: 0.5}
+    offsetScale: {x: 0.32, y: -0.17, z: 1}
   - points:
     - {x: -0.5, y: 1, z: 0}
     - {x: 0.5, y: 1, z: 0}

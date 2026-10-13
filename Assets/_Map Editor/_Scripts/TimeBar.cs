@@ -5,16 +5,41 @@ using UnityEngine.UI;
 using UnityEngine.UIElements;
 using UnityEngine.Events;
 
+/// <summary>
+/// Visual time bar that indicates the current audio time and can move the timeline view.
+/// Raises an event when the time bar moves so listeners can update displays.
+/// </summary>
 [RequireComponent(typeof(RectTransform))]
 public class TimeBar : MonoBehaviour
 {
 
+    /// <summary>
+    /// Link to the MapEditManager to query the audio source and timeline info.
+    /// </summary>
     public MapEditManager mapEditManager;
+    /// <summary>
+    /// RectTransform representing the time bar visual element.
+    /// </summary>
     [SerializeField] RectTransform m_timeBarTrans;
+    /// <summary>
+    /// Pixel thickness of the time bar.
+    /// </summary>
     [SerializeField] float m_thickness = 5;
+    /// <summary>
+    /// Whether the timeline should follow playback while playing.
+    /// </summary>
     [SerializeField] bool m_fallow = true;
+    /// <summary>
+    /// Whether the time bar is vertical.
+    /// </summary>
     [SerializeField] bool m_vertical = true;
+    /// <summary>
+    /// Current time represented by the time bar.
+    /// </summary>
     public double currentTime = -1;
+    /// <summary>
+    /// Event invoked when the time bar is moved. Provides the new time in seconds.
+    /// </summary>
     public UnityEvent<double> onTimeBarMoved = new UnityEvent<double>();
 
     bool Vertical { get => m_vertical; set { SetBarOrientation(m_vertical = value, m_thickness); } }
@@ -62,7 +87,7 @@ public class TimeBar : MonoBehaviour
 
 
         var scrollPos = sr.normalizedPosition;
-        var viewSizeNorm = rt.sizeDelta / sr.content.sizeDelta;//view size in relation to content size
+        var viewSizeNorm = rt.rect.size / sr.content.rect.size;//view size in relation to content size
 
 
         var tmpPos = (m_vertical ? scrollPos.y : scrollPos.x);
@@ -86,11 +111,13 @@ public class TimeBar : MonoBehaviour
 
     public void SetLocation(double time, bool fallow = false)
     {
+        var source = mapEditManager.AudioSource;
+        var clip = source.clip;
+
+        if(clip.AccurateLength() <= 0) return;
         if(!mapEditManager.timelineImageCreator) throw new NullReferenceException("Timeline Creater was not set");
         if(!m_timeBarTrans) throw new NullReferenceException("Time Bar was not set");
 
-        var source = mapEditManager.AudioSource;
-        var clip = source.clip;
         var timebarPos = time / clip.AccurateLength();
 
         var rect = GetComponent<RectTransform>().rect;

@@ -7,6 +7,9 @@ using System.IO;
 
 
 
+/// <summary>
+/// Reads and parses a MIDI file to extract beat, tempo, and text events for map creation.
+/// </summary>
 public class BeatMapReader : MonoBehaviour
 {
     [SerializeField] string fileName;

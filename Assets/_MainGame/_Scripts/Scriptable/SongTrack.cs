@@ -10,11 +10,21 @@ using UnityEngine;
 [Serializable]
 [MessagePackObject(true, AllowPrivate = true)]
 [CreateAssetMenu(menuName = "ScriptableObjects/SongTrack")]
-public class SongTrack : ScriptableObject
+/// <summary>
+/// ScriptableObject that stores song metadata, beats, tempo map and prefab references for a level.
+/// </summary>
+public partial class SongTrack : ScriptableObject
 {
-    public string songName;
-    public string artist;
-    public string mapper;
+    /// <summary>
+    /// Human-readable song name.
+    /// </summary>
+    [SerializeField]private string _songName;
+    [SerializeField]private string _artist;
+    [SerializeField]private string _mapper;
+    public string songName { get => _songName; set => _songName = value; }
+    public string artist { get => _artist; set => _artist = value; }
+    public string mapper { get => _mapper; set => _mapper = value; }
+
     public Version version { get; } = new Version(1, 0);
 
     [IgnoreMember]
@@ -26,6 +36,10 @@ public class SongTrack : ScriptableObject
     public List<BeatData> beats;
 
     public TempoMap tempoMap;
+
+    /// <summary>
+    /// Ensures internal collections and the tempo map are initialized when the asset is enabled.
+    /// </summary>
 
     private void OnEnable()
     {

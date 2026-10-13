@@ -12,9 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2dc886499c26824283350fa532d087d, type: 3}
   m_Name: XRGeneralSettingsPerBuildTarget
   m_EditorClassIdentifier: 
-  Keys: 01000000
-  Values:
-  - {fileID: 6093950757887970452}
+  Keys: 
+  Values: []
+  m_SettingsPerBuildTarget:
+  - buildTarget: 1
+    settings: {fileID: 6093950757887970452}
 --- !u!114 &6093950757887970452
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27,7 +29,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d236b7d11115f2143951f1e14045df39, type: 3}
   m_Name: Standalone Settings
   m_EditorClassIdentifier: 
-  m_LoaderManagerInstance: {fileID: 7251048829617112545}
+  m_Manager: {fileID: 7251048829617112545}
   m_InitManagerOnStart: 1
 --- !u!114 &7251048829617112545
 MonoBehaviour:
@@ -46,3 +48,4 @@ MonoBehaviour:
   m_AutomaticRunning: 0
   m_Loaders:
   - {fileID: 11400000, guid: e8bc71acb6c4f2a46bf4ee650da4efb0, type: 2}
+  - {fileID: 11400000, guid: 875c61381972a7740967e0e123923a59, type: 2}

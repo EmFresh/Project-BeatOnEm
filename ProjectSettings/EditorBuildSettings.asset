@@ -5,30 +5,23 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/EmotionalRhythemGame Title.unity
     guid: 2fb482a4848407144804a6e6ceeda0f0
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/EmotionalRhythemGame.unity
     guid: 0e12dc53455917344b0533770073f8d5
+  - enabled: 1
+    path: Assets/_Map Editor/Beat map creator.unity
+    guid: 6e47c1a0b67f73a4dab3bc0930febc36
   m_configObjects:
-    Unity.XR.Oculus.Settings: {fileID: 11400000, guid: cdab97502c764304fa9e18f9937174da,
-      type: 2}
-    Unity.XR.WindowsMR.Settings: {fileID: 11400000, guid: dc5a169419fa04987b057f65238cf3ba,
-      type: 2}
-    com.unity.adaptivePerformance.basic.provider_settings: {fileID: 11400000, guid: 751e72909a6b0dd438a5eb88497e037e,
-      type: 2}
-    com.unity.adaptiveperformance.loader_settings: {fileID: 11400000, guid: da00599d111a59a46a7bc0494309d714,
-      type: 2}
-    com.unity.adaptiveperformance.simulator.provider_settings: {fileID: 11400000,
-      guid: 1a2cee663be5ef9498b30fae37863a75, type: 2}
-    com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f,
-      type: 2}
-    com.unity.input.settings: {fileID: 11400000, guid: 46cad0fcd2725d84680b5838f5ec3b1f,
-      type: 2}
-    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: af598cd84bde93148b6b855377e7399b,
-      type: 2}
-    com.unity.xr.openxr.settings4: {fileID: 11400000, guid: 1156e9c4c994d9741a1803f4947f73f3,
-      type: 2}
-    xr.sdk.mock-hmd.settings: {fileID: 11400000, guid: c13fd0c8f0381d74c8a5d0bb996cab61,
-      type: 2}
+    Unity.XR.Oculus.Settings: {fileID: 11400000, guid: cdab97502c764304fa9e18f9937174da, type: 2}
+    Unity.XR.WindowsMR.Settings: {fileID: 11400000, guid: dc5a169419fa04987b057f65238cf3ba, type: 2}
+    com.unity.adaptivePerformance.basic.provider_settings: {fileID: 11400000, guid: 751e72909a6b0dd438a5eb88497e037e, type: 2}
+    com.unity.adaptiveperformance.loader_settings: {fileID: 11400000, guid: da00599d111a59a46a7bc0494309d714, type: 2}
+    com.unity.adaptiveperformance.simulator.provider_settings: {fileID: 11400000, guid: 1a2cee663be5ef9498b30fae37863a75, type: 2}
+    com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}
+    com.unity.input.settings: {fileID: 11400000, guid: 46cad0fcd2725d84680b5838f5ec3b1f, type: 2}
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: af598cd84bde93148b6b855377e7399b, type: 2}
+    com.unity.xr.openxr.settings4: {fileID: 11400000, guid: 1156e9c4c994d9741a1803f4947f73f3, type: 2}
+    xr.sdk.mock-hmd.settings: {fileID: 11400000, guid: 3387b08495271fd42a90de13c5c1ce26, type: 2}

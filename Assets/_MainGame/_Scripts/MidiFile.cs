@@ -7,6 +7,9 @@
 
 	public class MidiFile
 	{
+		/// <summary>
+		/// Lightweight MIDI file parser used to read tracks, events and meta information from standard MIDI files.
+		/// </summary>
 		public readonly int Format;
 
 		public readonly int TicksPerQuarterNote;

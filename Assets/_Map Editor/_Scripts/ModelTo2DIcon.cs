@@ -4,18 +4,34 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 
 using Unity.Mathematics;
+using Unity.Scripting.LifecycleManagement;
 
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(RawImage))]
-public class ModelTo2DIcon : MonoBehaviour
+/// <summary>
+/// Utility that renders a 3D GameObject to a 2D texture using a dedicated camera and assigns it to a RawImage.
+/// Useful for creating icons or thumbnails from models.
+/// </summary>
+public partial class ModelTo2DIcon : MonoBehaviour
 {
 
+    /// <summary>
+    /// Camera used to render the target object to a RenderTexture.
+    /// </summary>
     public Camera renderCam;
 
+    /// <summary>
+    /// The target GameObject to render as a 2D icon.
+    /// </summary>
     public GameObject targetObject;
+
+    /// <summary>
+    /// Convert the target GameObject to a 2D Texture using the configured render camera and
+    /// assign it to the RawImage on this GameObject. Runs during Awake.
+    /// </summary>
 
     // private void Update()
     // {
@@ -50,7 +66,7 @@ public class ModelTo2DIcon : MonoBehaviour
         public bool instantiateObj;
     }
 
-    private static HashSet<ConversionParams> values = new HashSet<ConversionParams>();
+    [AutoStaticsCleanup] private static HashSet<ConversionParams> values = new HashSet<ConversionParams>();
     public static void Convert()
     {
 

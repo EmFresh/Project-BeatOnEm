@@ -3,29 +3,55 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
+using Unity.Mathematics;
+using Unity.Scripting.LifecycleManagement; 
+
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI.Extensions;
 
-using Unity.Mathematics;
 /*
 loot boxes
 multiple mele weapons
 last hit cyoty time
  */
 
-public class EnemyActions : MonoBehaviour
+
+/// <summary>
+/// Encapsulates enemy behaviour and hit logic driven by timed NoteData entries.
+/// Handles animation, hit detection, and cleanup for enemies.
+/// </summary>
+public partial class EnemyActions : MonoBehaviour
 {
+    /// <summary>
+    /// Reference to the SongManager used to query audio time and guidance systems.
+    /// </summary>
     public SongManager SongManager;
+    /// <summary>
+    /// The sequence of note hit data that drives this enemy's behavior.
+    /// </summary>
     public List<NoteData> noteData;
+    /// <summary>
+    /// Optional model used to visualize hits.
+    /// </summary>
     public GameObject hitModel;
     // public Transform root;
+    /// <summary>
+    /// Time window (seconds) used to consider hits valid around note timings.
+    /// </summary>
     public float hitWindow = 2.1f;
-    private static List<EnemyActions> AllActionsList { get; } = new List<EnemyActions>();
+    /// <summary>
+    /// Visualizer used to display hit locations and feedback.
+    /// </summary>
     public HitLocationVisualizer visualizer;
+
+    [AutoStaticsCleanup] private static List<EnemyActions> AllActionsList { get; } = new List<EnemyActions>();
+
 
     public static List<EnemyActions> GetAllActions() => AllActionsList;
 
     // Awake is called only once before Start
+
     void Awake()
     {
         AllActionsList.Add(this);
@@ -43,11 +69,11 @@ public class EnemyActions : MonoBehaviour
 
     private int last = 0;
     //public DateTime timer = DateTime.MinValue;
-    public AudioSource clip;
+    //public AudioSource clip;
     void NoteUpdate()
     {
         var timings = noteData.Select(v => v.hitTiming).ToList();
-        var cTime = clip.time;
+        var cTime = SongManager.AudioSource.AccurateTime();
         if(timings == null) return;
 
 
@@ -71,28 +97,28 @@ public class EnemyActions : MonoBehaviour
                 {
                 case HitType.NONE:
                 case HitType.TEST1://melee target
-                    print("Test1 Triggered");
+                                   // print("Test1 Triggered");
 
                     StartCoroutine(AnimateMeleeTarget(timing, hitWindow, visualizer, location: noteData[count].hitLocation));
                     //	StartCoroutine(AnimateMeleeTarget(time, time + reactTime, transform.localPosition));
 
                     break;
                 case HitType.TEST2://dodge target
-                    print("Test2 Triggered");
+                    //print("Test2 Triggered");
                     StartCoroutine(AnimateMeleeTarget(timing, hitWindow, visualizer, location: noteData[count].hitLocation));
                     //  StartCoroutine(AnimateMeleeTarget(timing, hitWindow));
                     //	StartCoroutine(AnimateNote2(time, time + reactTime, transform.localPosition));
 
                     break;
                 case HitType.TEST3://dodge target
-                    print("Test2 Triggered");
+                    //print("Test2 Triggered");
                     StartCoroutine(AnimateMeleeTarget(timing, hitWindow, visualizer, location: noteData[count].hitLocation));
                     //  StartCoroutine(AnimateMeleeTarget(timing, hitWindow));
                     //	StartCoroutine(AnimateNote3(time, time + reactTime, transform.localPosition));
 
                     break;
                 case HitType.TEST4://dodge target
-                    print("Test2 Triggered");
+                    //print("Test2 Triggered");
                     StartCoroutine(AnimateMeleeTarget(timing, hitWindow, visualizer, location: noteData[count].hitLocation));
                     //  StartCoroutine(AnimateMeleeTarget(timing, hitWindow));
                     //	StartCoroutine(AnimateNote4(time, time + reactTime, transform.localPosition));
@@ -100,7 +126,9 @@ public class EnemyActions : MonoBehaviour
                     break;
                 default:
                     break;
+
                 }
+
 
                 last = count + 1;
             }
@@ -116,33 +144,38 @@ public class EnemyActions : MonoBehaviour
 
     IEnumerator AnimateMeleeTarget(double timing, float window, HitLocationVisualizer visualizer, int location)
     {
-        var obj = Instantiate(visualizer.points[location], visualizer.parent ? visualizer.parent : visualizer.transform,false);
-        obj.transform.localScale = Vector3.one * 1.8f;
+        var parent = visualizer.parent ? visualizer.parent : visualizer.transform;
+        var obj = Instantiate(visualizer.points[location], parent, false);
         var rend = obj.GetComponentInChildren<Renderer>();
 
+        obj.transform.localScale = Vector3.one * 1.8f;
         rend.material.color = Color.red;
 
-        IEnumerator Cleanup()
-        {
-            yield return new WaitForSeconds(window);
-            Destroy(obj);
-        }
+        var lastNotePosition = SongManager.guideTrail.GetLastNotePosition();
+        SongManager.guideTrail.onGuideTrailNext.Invoke(lastNotePosition, SongManager.guideTrail.SetLastNotePosition(visualizer.points[location].transform.position), SongManager.AudioSource.AccurateTime(), timing);
 
-        var callback = obj.AddComponent<HayYouSlappedSomething>();
-
-        callback.onObjectHit.AddListener(() => { Destroy(obj); });
+        var callback = visualizer.points[location].GetOrAddComponent<HayYouSlappedSomething>();
+        callback.enabled = true;
+        callback.SongManager = SongManager;
+        callback.onObjectHit.AddListener((c) => { StartCoroutine(Cleanup()); });
 
         var targetScales = new List<Vector3>() { obj.transform.localScale };
 
         yield return new WaitUntil(() =>
         {
+            if(obj == null)
+                return true;
+
             float i = 0;
-            obj.GetComponentInChildren<Renderer>().material.color =
+            var cTime = SongManager.AudioSource.AccurateTime();
+            var objRenderer = obj.GetComponentInChildren<Renderer>();
+
+            objRenderer.material.color =
             Color.Lerp(Color.red, Color.green,
-            Mathf.Clamp((i =
-            Mathf.InverseLerp((float)(clip.time < timing ?
+            Mathf.Clamp01((i =
+            Mathf.InverseLerp((float)(cTime < timing ?
             timing - (window * .5f) : timing + (window * .5f)),
-            (float)timing, clip.time))*i , 0, 1));//testing
+            (float)timing, (float)cTime)) * i));//testing
 
             // for(int a = 0; a < obj.transform.childCount; ++a)
             obj.transform.localScale
@@ -150,20 +183,26 @@ public class EnemyActions : MonoBehaviour
 
 
             //Animation Logic Here!!
-            if(clip.time >= timing)//on note timing 
+            if(cTime >= timing)//on note timing 
             {
                 //obj.GetComponentInChildren<Renderer>().material.color = new Color(0, 1, 0);
                 StartCoroutine(Cleanup());
             }
-            // Any other logic
 
-            if(clip.time >= timing + window * .5f)//on completion
+            // Any other logic
+            if(cTime >= timing + window * .5f)//on completion
                 return true;
 
             return false;
-
-
         });
+
+        IEnumerator Cleanup(float time = 0)
+        {
+            yield return new WaitForSeconds(time);
+            Destroy(obj);
+            if(lastNotePosition == SongManager.guideTrail.GetLastNotePosition())
+                callback.enabled = false;
+        }
 
         yield break;
     }
@@ -177,9 +216,10 @@ public class EnemyActions : MonoBehaviour
 
         yield return new WaitUntil(() =>
         {
+            var cTime = SongManager.AudioSource.AccurateTime();
             //print("Why this no work?");
             //Animation Logic Here!!
-            if(clip.time >= timing + window * .5)//Player not in danger
+            if(cTime >= timing + window * .5)//Player not in danger
                 return true;
 
             return false;
