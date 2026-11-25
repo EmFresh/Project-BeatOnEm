@@ -28,7 +28,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ai.navigation": {
-      "version": "2.0.14",
+      "version": "2.0.16",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -43,7 +43,7 @@
       "dependencies": {}
     },
     "com.unity.collab-proxy": {
-      "version": "2.13.6",
+      "version": "2.14.0",
       "depth": 0,
       "source": "registry",
       "dependencies": {},
@@ -61,7 +61,7 @@
       }
     },
     "com.unity.dt.app-ui": {
-      "version": "2.1.11",
+      "version": "2.3.1",
       "depth": 1,
       "source": "registry",
       "dependencies": {
@@ -89,8 +89,8 @@
       "depth": 0,
       "source": "builtin",
       "dependencies": {
-        "com.unity.xr.interaction.toolkit": "3.6.0",
-        "com.unity.xr.oculus": "4.5.5",
+        "com.unity.xr.interaction.toolkit": "3.6.1",
+        "com.unity.xr.oculus": "4.5.6",
         "com.unity.xr.openxr": "1.18.0"
       }
     },
@@ -101,12 +101,10 @@
       "dependencies": {}
     },
     "com.unity.ide.rider": {
-      "version": "3.0.40",
+      "version": "3.1.0",
       "depth": 0,
       "source": "registry",
-      "dependencies": {
-        "com.unity.ext.nunit": "1.0.6"
-      },
+      "dependencies": {},
       "url": "https://packages.unity.com"
     },
     "com.unity.ide.visualstudio": {
@@ -144,7 +142,7 @@
       "dependencies": {}
     },
     "com.unity.multiplayer.center": {
-      "version": "2.0.1",
+      "version": "2.1.0",
       "depth": 0,
       "source": "builtin",
       "dependencies": {
@@ -228,12 +226,12 @@
       "source": "builtin",
       "dependencies": {
         "com.unity.render-pipelines.core": "17.6.0",
-        "com.unity.searcher": "4.9.3",
+        "com.unity.searcher": "4.9.5",
         "com.unity.graph-authoring": "1.0.0"
       }
     },
     "com.unity.splines": {
-      "version": "2.9.1",
+      "version": "2.9.2",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -327,7 +325,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.xr.interaction.toolkit": {
-      "version": "3.6.0",
+      "version": "3.6.1",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -373,7 +371,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.xr.oculus": {
-      "version": "4.5.5",
+      "version": "4.5.6",
       "depth": 1,
       "source": "registry",
       "dependencies": {

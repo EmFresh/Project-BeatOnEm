@@ -75,7 +75,7 @@ public class EnemySpawner : MonoBehaviour
             for(int a = 0; a < 50; ++a)
                 yield return null;
 
-            FindAnyObjectByType<WorldScale>().Rescale(FindAnyObjectByType<Camera>().GetComponent<TrackedPoseDriver>()?.positionAction.ReadValue<Vector3>().y ?? 1, 1);
+            FindAnyObjectByType<WorldScale>().Rescale(FindAnyObjectByType<Camera>().GetComponentInParent<TrackedPoseDriver>()?.positionAction.ReadValue<Vector3>().y ?? 1, 2);
 
             print($"controls: {string.Join(", ", FindAnyObjectByType<TrackedPoseDriver>(FindObjectsInactive.Include).positionAction.activeControl?.device.allControls.Select(ctrl => ctrl.name) ?? new List<string>())}");
         }   
@@ -99,6 +99,7 @@ public class EnemySpawner : MonoBehaviour
 
         if(init)
         {
+            // Sort beat sections once and cache only entries that have a finite spawn time.
             songManager.MapTrack.beats.Sort((a, b) => { return a?.spawnTime.CompareTo(b?.spawnTime) ?? 1; });
             foreach(var beat in songManager.MapTrack.beats)
                 if((beat?.spawnTime ?? float.PositiveInfinity) != float.PositiveInfinity)
@@ -119,6 +120,7 @@ public class EnemySpawner : MonoBehaviour
             obj = Instantiate(songManager.MapTrack.enemyPrefabs[index], parentObj, false);
             obj.transform.localPosition = new(-1.15f + 1.15f * index, 0, 5/*start location*/ + reactTime * (mapMover.speed));
             obj.transform.localRotation *= Quaternion.Euler(0, 180, 0);
+
             return obj;
         }
 
@@ -128,6 +130,7 @@ public class EnemySpawner : MonoBehaviour
 
             //if((time?.Item2 ?? null) == null) continue;
 
+            // Stop at the first event already past its spawn window; later entries are sorted by time.
             if(songManager.AudioSource.AccurateTime() - time.Item1 >= reactTime) // top bound for enemy
                 break;
 
@@ -142,6 +145,7 @@ public class EnemySpawner : MonoBehaviour
                 var notespace = parentObj.transform.GetChild(0).GetComponent<Collider>().bounds.extents.x / 2;
 
 
+                // Instantiate the configured enemy, then attach and initialize its movement and note behavior.
                 obj = createEnemy(time.Item2.enemyIndex);
 
 

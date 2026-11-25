@@ -67,7 +67,6 @@ public class SeekBar : MonoBehaviour
     bool vertical { get => m_vertical; set { SetBarOrientation(m_vertical = value, m_thickness); } }
     float thickness { get => m_thickness; set { SetBarOrientation(m_vertical, m_thickness = value); } }
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     /// <summary>
     /// Awake lifecycle callback. Sets initial orientation and hooks pointer click events for seeking.
     /// </summary>
@@ -87,9 +86,7 @@ public class SeekBar : MonoBehaviour
                 if(ped.button == PointerEventData.InputButton.Left)
                 {
 
-                    var pointPressed =// ped.pointerPressRaycast.worldPosition;
-                    Mouse.current.position.value;
-                    //print($"Pressed at: {pointPressed}");
+                    var pointPressed = Mouse.current.position.value;
                     pointPressed = GetComponent<RectTransform>().InverseTransformPoint(pointPressed);
                     var rect = GetComponent<RectTransform>().rect;
                     float timeNorm = m_vertical ?
@@ -98,22 +95,12 @@ public class SeekBar : MonoBehaviour
                     var clip = mapEditManager.AudioSource.clip;
                     var time = timeNorm * clip.AccurateLength();
 
-                  //  print($"timeline rect: {rect}, point pressed: {pointPressed}, time norm: {timeNorm}, time: {time}");
-
-                    //  m_creator.AudioSource.time = time;
                     SetLocation(time, fallow, snap);
-                    //StartCoroutine(UpdateVisualsCoroutine());
-                    //IEnumerator UpdateVisualsCoroutine()
-                    //{
-                    //    yield return null;
-                    //    mapEditManager.UpdateVisuals();
-                    //}
 
                 }
             })
         );
 
-        //bool tmpFallow = true;
         var rect = mapEditManager.timelineImageCreator.GetComponent<ScrollRect>();
 
         rect.onValueChanged.AddListener((pos) => { SetLocation(currentTime); });
@@ -160,6 +147,7 @@ public class SeekBar : MonoBehaviour
     public void Fallow(double time)
 
     {
+        // Convert playback time to normalized timeline position and determine the viewport's content fraction.
         var clip = mapEditManager.AudioSource.clip;
         var timebarPos = time / clip.AccurateLength();
 
@@ -178,6 +166,7 @@ public class SeekBar : MonoBehaviour
         if(!InRange(timebarPos + Mathf.Lerp(0, m_vertical ? viewSizeNorm.y : viewSizeNorm.x, (float)timebarPos),
             tmpPos + (m_vertical ? viewSizeNorm.y : viewSizeNorm.x) * min, tmpPos + (m_vertical ? viewSizeNorm.y : viewSizeNorm.x) * max))
         {
+            // Recenter the view near the target only when it leaves the preferred inner viewport region.
             tmpPos = Mathf.Clamp01(((float)timebarPos +
                 Mathf.Lerp(0, m_vertical ? viewSizeNorm.y : viewSizeNorm.x, (float)timebarPos)) -
                 (m_vertical ? viewSizeNorm.y : viewSizeNorm.x) * fallowPoint);
@@ -209,6 +198,7 @@ public class SeekBar : MonoBehaviour
 
         if(snap)
         {
+            // Adjust BPM for the active time-signature beat unit before finding neighboring beat boundaries.
             var tempo = mapEditManager.MapTrack.tempoMap.GetTempo(time).Clone();
             var timeSig = mapEditManager.MapTrack.tempoMap.GetTimeSig(time).Clone();
 
@@ -222,6 +212,7 @@ public class SeekBar : MonoBehaviour
             time /= 1000;
         }
 
+        // Map the resolved time to the timeline axis, optionally follow it, and notify listeners.
         var timebarPos = (time) / clip.AccurateLength();
 
         var rect = GetComponent<RectTransform>().rect;

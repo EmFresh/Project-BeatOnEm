@@ -89,6 +89,7 @@ public partial class ModelTo2DIcon : MonoBehaviour
 
         for(int i = 0; i < values.Count; ++i)
         {
+            // Resolve the queued request and optionally create an isolated copy for rendering.
             var param = values.ElementAt(i);
             var obj = param.obj;
             var renderCam = param.cam;
@@ -97,6 +98,7 @@ public partial class ModelTo2DIcon : MonoBehaviour
             if(instantiateObj)
                 obj = Instantiate(obj);
 
+            // Fit the orthographic camera to the mesh, then position the object along its viewing direction.
             var bounds = obj.GetComponentInChildren<MeshFilter>().sharedMesh.bounds;
             //foreach(var mesh in obj.GetComponentsInChildren<MeshFilter>())
             //{
@@ -117,6 +119,7 @@ public partial class ModelTo2DIcon : MonoBehaviour
             if(renderCam.targetTexture == null)
                 renderCam.targetTexture = RenderTexture.GetTemporary(500, 500, 1);
 
+            // Render into the target texture and copy its pixels into a CPU-readable Texture2D.
             renderCam.Render();
 
 
@@ -127,6 +130,7 @@ public partial class ModelTo2DIcon : MonoBehaviour
 
 
 
+            // Release only the temporary instance; caller-owned objects remain untouched.
             if(instantiateObj)
                 Destroy(obj);
         }

@@ -23,8 +23,10 @@ public class AutoPointLocation : MonoBehaviour
     /// <summary>Updates the attached object's position from its configured hit-location data.</summary>
     void Update()
     {
+        // Recalculate the offset position each frame so changes to hit-location settings are reflected.
         var pos = hitPoints.GetOffsetPoint(point);
 
+        // Avoid writing the transform when its local position already matches the calculated point.
         if(transform.localPosition != pos)
             transform.localPosition = pos;
     }

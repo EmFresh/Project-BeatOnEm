@@ -48,6 +48,7 @@ public class BeatMapReader : MonoBehaviour
         {
             foreach(var ev in tracks.MidiEvents)
             {
+                // Metadata and channel events are classified separately before deriving note-based mapping values.
                 switch(ev.MetaEventType)
                 {
                 case MetaEventType.KeySignature:
@@ -77,6 +78,7 @@ public class BeatMapReader : MonoBehaviour
 
             foreach(var ev in tracks.TextEvents)
             {
+                // Distinguish general text from lyrics for later map metadata handling.
                 switch(ev.TextEventType)
                 {
                 case TextEventType.Text:

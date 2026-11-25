@@ -57,7 +57,6 @@ public class TimelineImageCreator : MonoBehaviour
     private void Awake()
     {
         scrollRect = GetComponent<ScrollRect>();
-        // UpdateImageUIAsync(false);
     }
 
     /// <summary>
@@ -79,6 +78,8 @@ public class TimelineImageCreator : MonoBehaviour
     {
         scrollRect = GetComponent<ScrollRect>();
         scrollRect.normalizedPosition = Vector2.zero;
+        if(editManager.AudioSource.clip == null)
+            return;
         AddLineToUI(await CreateLineAsync(w: 1, h: editManager.AudioSource.clip.samples / editManager.AudioSource.clip.channels / 100, steps: .3f, vertical: true, async: async), maxPoints: 4000, parents: lineRenderers);
     }
 
@@ -146,7 +147,6 @@ public class TimelineImageCreator : MonoBehaviour
     {
         int a = 0;
         Color[] colors = new Color[] { Color.darkOliveGreen, Color.rebeccaPurple, Color.blue, Color.yellow, Color.cyan, Color.magenta };
-        // set parent of images
         foreach (var parent in parents)
         {
             var pointlist = points[a].ToList();
@@ -176,8 +176,6 @@ public class TimelineImageCreator : MonoBehaviour
                     renderer.raycastTarget = false;
                     renderer.maskable = true;
                     renderer.canvasRenderer.cull = false;
-                    // renderer.canvasRenderer.EnableRectClipping(GetComponentInParent<ScrollRect>().GetComponent<RectTransform>().rect);
-
                     for (b = 0; b < renderer.Points.Length; ++b)
                     {
                         var refPoint = pointlist[b + divCount - (divCount > 0 ? 1 : 0)];
@@ -191,7 +189,6 @@ public class TimelineImageCreator : MonoBehaviour
                 else
                     renderer.Points = null;
 
-                //  print($"completed {b} of {pointlist.Count} objects");
             }
             ++a;
         }
@@ -206,19 +203,17 @@ public class TimelineImageCreator : MonoBehaviour
     private void AddTextureToUI<T>(IEnumerable<T> images, RectTransform parent) where T : Texture
     {
         int a = 0;
-        // set parent of images
         foreach (var image in images)
         {
             if (a >= UIImages.Count)
                 UIImages.Add(new GameObject($"Image {a + 1}", typeof(RawImage)));
 
-            UIImages[a].transform.SetParent(scrollRect.content, false);
+            UIImages[a].transform.SetParent(parent, false);
             UIImages[a].GetComponent<RawImage>().texture = image;
 
             ++a;
         }
 
-        // remove unused imag
         for(int b = a; b < UIImages.Count; ++b)
             Destroy(UIImages[b]);
 
@@ -245,14 +240,13 @@ public class TimelineImageCreator : MonoBehaviour
         if(audioLengthPerImage <= 0)
             audioLengthPerImage = editManager.AudioSource.clip.length;
 
-        //get amout of images based on clip length
+        // Divide the clip into equal-duration image segments.
         var imageAmount = editManager.AudioSource.clip.length / audioLengthPerImage;
 
         var images = new Texture2D[(int)Mathf.Ceil(imageAmount)];
 
-
-        var songData = new float[editManager.AudioSource.clip.samples * editManager.AudioSource.clip.channels - 1];
-        //= (float[])Array.CreateInstance(typeof(float), AudioSource.clip.samples * AudioSource.clip.channels);
+        // Read the interleaved channel samples once and divide their indices across the output images.
+        var songData = new float[editManager.AudioSource.clip.samples * editManager.AudioSource.clip.channels];
         float samplesPerImage = (songData.Length) / imageAmount;
         editManager.AudioSource.clip.GetData(songData, 0);
 
@@ -261,6 +255,7 @@ public class TimelineImageCreator : MonoBehaviour
 
         for(int a = 0; a < images.Length; ++a)
         {
+            // Create a full-size texture except for the final partial audio segment.
             var length = (int)((imageAmount - a) >= 1 ? (vertical ? h : w) : (vertical ? h : w) * (imageAmount - a));
 
             Texture2D tex = images[a] = new Texture2D(vertical ? w : length, vertical ? length : h, TextureFormat.RGB24, false);
@@ -271,10 +266,9 @@ public class TimelineImageCreator : MonoBehaviour
             int width = (!vertical ? tex.height : tex.width);
             print($"Creating image {a + 1} of {images.Length} with length {length} and width {width})");
 
-            //get the sample index based on the image position
+            // Map a pixel along this segment to its channel-aligned position in the audio buffer.
             int GetSampleIndex(int pos, int channel)
             {
-                // float stepDiv = (float)length / steps;
                 var lengthPos = ((float)(pos) / length);
                 var sampleIndex = (int)(a * samplesPerImage + lengthPos * samplesPerImage) + channel;
                 sampleIndex -= (sampleIndex + channel) % editManager.AudioSource.clip.channels;
@@ -282,9 +276,9 @@ public class TimelineImageCreator : MonoBehaviour
                 return sampleIndex;
             }
 
-            //get the audio value at the given position
             float GetSongDataValue(int pos, int channel, int steps)
             {
+                // Locate adjacent sampled positions, clamp at the buffer end, and interpolate between them.
                 var pixelsPerStep = ((float)length / steps);
                 var stepPos = (int)(pos / pixelsPerStep) * pixelsPerStep;
 
@@ -302,6 +296,7 @@ public class TimelineImageCreator : MonoBehaviour
 
             }
 
+            // Convert each channel's samples to waveform coordinates and rasterize the connecting trace.
             for(int y = 0; y < (vertical ? tex.height : tex.width); ++y)
             {
                 for(int channel = 0; channel < editManager.AudioSource.clip.channels; ++channel)
@@ -314,36 +309,20 @@ public class TimelineImageCreator : MonoBehaviour
                     nextValue = (nextValue * .5f + .5f);
                     nextValue *= width / editManager.AudioSource.clip.channels;
 
-                    //colour image
                     for(int x = 0; x < (!vertical ? tex.height : tex.width); ++x)
                     {
                         if(channel == 0)
                             tex.SetPixel((!vertical ? y : x), (vertical ? y : x), Color.black);//background colour
 
-                        //set colour
                         int pixels = 1;
                         if(Math.Clamp(x,
                             Mathf.Min(value, nextValue) + width / editManager.AudioSource.clip.channels * channel - pixels,
                             Mathf.Max(value, nextValue) + width / editManager.AudioSource.clip.channels * channel + pixels) == x)
                             tex.SetPixel((!vertical ? y : x), (vertical ? y : x), channel % 2 == 0 ? Color.darkOliveGreen : Color.rebeccaPurple);
 
-                        //if((y < 10 || y == tex.height - 1) && x == 0)
-                        //{
-                        //    print("Last Value: " + value);
-                        //    print("Next Value: " + nextValue);
-                        //    //print("Lerp Value: " + ((vertical ? y : x) / samplesPerPixel) % samplesPerPixel);
-                        //    //print("Last Data: " + songData[lastSampleIndex]);
-                        //    //print("Next Data: " + songData[nextSampleIndex]);
-                        //    //print("Value Data: " + value);
-                        //}
                     }
-                    //if(async)
-                    //    await Task.Yield(); //yield to allow the UI to update
 
                 }
-
-                //if(async)
-                //    await Task.Yield(); //yield to allow the UI to update
             }
 
             tex.Apply();
@@ -374,33 +353,20 @@ public class TimelineImageCreator : MonoBehaviour
 
         var positions = new HashSet<Vector2>[editManager.AudioSource.clip.channels];
 
-        var songData = new float[editManager.AudioSource.clip.samples * editManager.AudioSource.clip.channels - 1];
-        //= (float[])Array.CreateInstance(typeof(float), AudioSource.clip.samples * AudioSource.clip.channels);
-        //float samplesPerImage = (songData.Length) / imageAmount;
+        var songData = new float[editManager.AudioSource.clip.samples * editManager.AudioSource.clip.channels];
         editManager.AudioSource.clip.GetData(songData, 0);
 
-
-
+        // Let Unity render the current frame before processing the sample buffer when requested.
         if(async)
             await Task.Yield(); //yield to allow the UI to update
 
-        //for(int a = 0; a < images.Length; ++a)
         {
-
-            //  Texture2D tex = images[a] = new Texture2D(vertical ? w : length, vertical ? length : h, TextureFormat.RGB24, false);
-            //   tex.filterMode = FilterMode.Bilinear;
-
-
             var length = (float)(vertical ? h : w);
             var width = (float)(!vertical ? h : w);
 
-
-            // print($"Creating image {a + 1} of {images.Length} with length {length} and width {width})");
-
-            //get the sample index based on the image position
+            // Map a normalized waveform position to the interleaved audio sample buffer.
             int GetSampleIndex(float pos, int channel)
             {
-                // float stepDiv = (float)length / steps;
                 var lengthPos = ((pos) / length);
                 var sampleIndex = (int)(lengthPos * songData.Length) + channel;
                 sampleIndex -= (sampleIndex + channel) % editManager.AudioSource.clip.channels;
@@ -408,7 +374,7 @@ public class TimelineImageCreator : MonoBehaviour
                 return sampleIndex;
             }
 
-            //get the audio value at the given position
+            // Interpolate between neighboring samples for the requested channel.
             float GetSongDataValue(float pos, int channel, float steps)
             {
                 var pixelsPerStep = (length / (editManager.AudioSource.clip.frequency * steps));
@@ -430,7 +396,7 @@ public class TimelineImageCreator : MonoBehaviour
 
 
             var space = 1f / editManager.AudioSource.clip.channels;
-            //int step = length / 1000;
+            // Normalize each channel's samples and store points in the requested orientation.
             for(int y = 0; y < length; ++y)
             {
                 for(int channel = 0; channel < editManager.AudioSource.clip.channels; ++channel)
@@ -450,8 +416,6 @@ public class TimelineImageCreator : MonoBehaviour
 
                 }
 
-                //if(async)
-                //    await Task.Yield(); //yield to allow the UI to update
             }
         }
 

@@ -30,6 +30,7 @@ public class EnemyControl : MonoBehaviour
     /// <param name="end">Movement end time in seconds.</param>
     public void Init(WorldControl world, LanePoint lane, AudioSource audio, double start, double end)
     {
+        // Capture the spawn transform, then retain the target, audio clock, and movement interval.
         startPosition = transform.position;
         startRotation = transform.rotation;
         worldControl = world;
@@ -43,6 +44,7 @@ public class EnemyControl : MonoBehaviour
     /// <summary>Interpolates the enemy's position and rotation toward its target lane based on audio time.</summary>
     private void Update()
     {
+        // Convert audio time to normalized progress and use it for both position and rotation interpolation.
         var t = (float)((AudioSource.AccurateTime() - startTime) / (endTime - startTime));
         transform.position = Vector3.Lerp(startPosition, lanePoint.transform.position, t);
         transform.rotation = Quaternion.Lerp(startRotation, lanePoint.transform.rotation, t);

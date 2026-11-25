@@ -95,6 +95,7 @@ public partial class SongTrack : ScriptableObject
     /// </summary>
     public void Init()
     {
+        // Initialize each collection independently so partially populated assets remain usable.
         if(enemyPrefabs == null)
             enemyPrefabs = new List<GameObject>();
         if(notePrefabs == null)
@@ -104,6 +105,7 @@ public partial class SongTrack : ScriptableObject
         if(beats == null)
             beats = new List<BeatData>();
 
+        // Ensure the nested tempo map is available and apply its own defaults/order.
         if(tempoMap == null)
             tempoMap = new TempoMap();
 
@@ -130,6 +132,7 @@ public partial class SongTrack : ScriptableObject
     /// <param name="excludePrefabs">If true, prefab lists are not copied.</param>
     public void Copy(SongTrack other, bool excludePrefabs = false)
     {
+        // Prefab references are optional, but timeline and tempo data are always copied.
         if(!excludePrefabs)
         {
             enemyPrefabs = other.enemyPrefabs.ToList();

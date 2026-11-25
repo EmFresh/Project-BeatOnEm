@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c7f4b2e1a4b86e43bd8a282a68fcc2c, type: 3}
   m_Name: Test Song
   m_EditorClassIdentifier: 
-  _songName: Numb
-  _artist: Linkin Park
-  _mapper: EmFresh
+  _songName: 
+  _artist: 
+  _mapper: 
   enemyPrefabs:
   - {fileID: 3540646333975573228, guid: eab2784ca193ae64e9e726eebc3ab5c6, type: 3}
   notePrefabs:
@@ -28,7 +28,7 @@ MonoBehaviour:
     - {x: 1, y: 0, z: 0}
     - {x: -0.5, y: -1, z: 0}
     - {x: 0.5, y: -1, z: 0}
-    offsetPos: {x: 0, y: 0.14, z: 0.5}
+    offsetPos: {x: 0, y: 0.15, z: 0.3}
     offsetScale: {x: 0.32, y: -0.17, z: 1}
   - points:
     - {x: -0.5, y: 1, z: 0}
@@ -326,8 +326,8 @@ MonoBehaviour:
   tempoMap:
     tempos:
     - bpm:
-        bpm: 109.5
-      timing: 13.023059108582855
+        bpm: 109.85497
+      timing: 0
     timeSigs:
     - beats: 4
       note: 8

@@ -115,11 +115,13 @@ public partial class BeatData
     /// <param name="timePad">Tolerance for duplicate detection in seconds.</param>
     public void AddNote(double hitTiming, int hitLocation, HitType hitType, float timePad = 0)
     {
+        // Reject an equivalent note already inside the tolerance window.
         if(noteDataList.Any((note) =>
          InRange(hitTiming, note.hitTiming - timePad, note.hitTiming + timePad) &&
         note.hitLocation == hitLocation &&
         note.hitType == hitType)) return;
 
+        // Store a new value only after duplicate detection passes.
         noteDataList.Add(new NoteData() { hitLocation = hitLocation, hitTiming = hitTiming, hitType = hitType });
     }
 
@@ -165,6 +167,7 @@ public partial class BeatData
     /// <returns>A new BeatData instance with copied fields.</returns>
     public BeatData Clone() => new BeatData()
     {
+        // Copy note values and section metadata into a new collection/object.
         noteDataList = noteDataList.Select(note => note.Clone()).ToList(),
         hitLocationsIndex = hitLocationsIndex,
         laneIndex = laneIndex,
@@ -197,11 +200,8 @@ public partial class BeatData
     /// </summary>
     public Vector3 spawnLocation;
 
-    /// <summary>
-    /// the spawn time based on the first enemy hitTiming 
-    /// </summary>
-    [IgnoreMember]
     /// <summary>Gets or sets the time offset used to calculate the enemy spawn time from the section start.</summary>
+    [IgnoreMember]
     public double spawnTime
     {
         set => _spawnTimeOffset = value;

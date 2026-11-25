@@ -48,6 +48,7 @@ namespace MidiParser
 		{
 			var position = 0;
 
+			// Validate the standard header before reading its fixed-size fields.
 			if(Reader.ReadString(data, ref position, 4) != "MThd")
 			{
 				throw new FormatException("Invalid file header (expected MThd)");
@@ -62,6 +63,7 @@ namespace MidiParser
 			this.TracksCount = Reader.Read16(data, ref position);
 			this.TicksPerQuarterNote = Reader.Read16(data, ref position);
 
+			// The high bit indicates SMPTE timing, which this parser does not support.
 			if((this.TicksPerQuarterNote & 0x8000) != 0)
 			{
 				throw new FormatException("Invalid timing mode (SMPTE timecode not supported)");
@@ -139,11 +141,12 @@ namespace MidiParser
 
 			while(position < trackEnd)
 			{
+				// MIDI event times are delta-encoded, so accumulate each delta into absolute ticks.
 				time += Reader.ReadVarInt(data, ref position);
 
 				var peekByte = data[position];
 
-				// If the most significant bit is set then this is a status byte
+				// A status byte starts a new event; otherwise reuse the previous status (running status).
 				if((peekByte & 0x80) != 0)
 				{
 					status = peekByte;
@@ -153,16 +156,16 @@ namespace MidiParser
 				// If the most significant nibble is not an 0xF this is a channel event
 				if((status & 0xF0) != 0xF0)
 				{
-					// Separate event type from channel into two
+					// Split status into the event kind and one-based channel before reading its data.
 					var eventType = (byte)(status & 0xF0);
 					var channel = (byte)((status & 0x0F) + 1);
 
 					var data1 = data[position++];
 
-					// If the event type doesn't start with 0b110 it has two bytes of data (i.e. except 0xC0 and 0xD0)
+					// Program-change and channel-pressure events carry one data byte; other channel events carry two.
 					var data2 = (eventType & 0xE0) != 0xC0 ? data[position++] : (byte)0;
 
-					// Convert NoteOn events with 0 velocity into NoteOff events
+					// MIDI represents note-off both explicitly and as note-on with zero velocity.
 					if(eventType == (byte)MidiEventType.NoteOn && data2 == 0)
 					{
 						eventType = (byte)MidiEventType.NoteOff;
@@ -175,10 +178,9 @@ namespace MidiParser
 				{
 					if(status == 0xFF)
 					{
-						// Meta Event
+						// Route text metadata separately; decode supported musical metadata into MIDI events.
 						var metaEventType = Reader.Read8(data, ref position);
 
-						// There is a group of meta event types reserved for text events which we store separately
 						if(metaEventType >= 0x01 && metaEventType <= 0x0F)
 						{
 							var textLength = Reader.ReadVarInt(data, ref position);
@@ -191,7 +193,6 @@ namespace MidiParser
 							var data1 = (byte)0;
 							var data2 = (byte)0;
 
-							// We only handle the few meta events we care about and skip the rest
 							if(ParseMetaEvent(data, ref position, metaEventType, ref data1, ref data2))
 							{
 								track.MidiEvents.Add(
@@ -208,7 +209,7 @@ namespace MidiParser
 					}
 					else if(status == 0xF0 || status == 0xF7)
 					{
-						// SysEx event
+						// Skip the length-prefixed payload of an unsupported system-exclusive event.
 						var length = Reader.ReadVarInt(data, ref position);
 						position += length;
 					}
@@ -288,6 +289,7 @@ namespace MidiParser
 			/// <returns>The decoded integer.</returns>
 			public static int ReadVarInt(byte[] data, ref int i)
 			{
+				// The first byte contributes seven data bits; its high bit signals continuation.
 				var result = (int)data[i++];
 
 				if((result & 0x80) == 0)
@@ -297,6 +299,7 @@ namespace MidiParser
 
 				result &= 0x7F;
 
+				// Append up to three subsequent seven-bit groups until the continuation bit clears.
 				for(var j = 0; j < 3; j++)
 				{
 					var value = (int)data[i++];

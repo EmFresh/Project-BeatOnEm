@@ -105,11 +105,13 @@ public partial class BPM
     {
         get
         {
+            // Recompute the reciprocal only when the underlying BPM value changes.
             if(_bpm != bpm)
                 try { _divider = 1d / bpm; }
                 catch { _divider = 0; }
 
             _bpm = bpm;
+            // Convert beats per minute to seconds per beat.
             return 60d * _divider;
         }
     }
@@ -154,8 +156,10 @@ public class Tempo
     /// <returns>The next beat time in seconds.</returns>
     public double GetNextBeat(double noteTime)
     {
+        // Shift to the tempo entry's origin, then count complete beat intervals.
         var currentTime = noteTime - timing;
         var amount = (int)Math.Floor(currentTime / bpm.spb);
+        // Advance to the next boundary; an exact-boundary input advances one additional beat.
         var val = ((amount + 1) * bpm.spb) + timing;
         var check = ((val) == (noteTime));//needed
 
@@ -168,9 +172,11 @@ public class Tempo
     /// <returns>The next beat time in milliseconds.</returns>
     public int GetNextBeatMilli(int noteTimeMilli)
     {
+        // Work in integer milliseconds relative to this tempo entry's start time.
         var currentTime = noteTimeMilli - TimingMilli;
         var amount = (currentTime / (bpm.mspb));
 
+        // Advance past the current beat boundary, including when input is already on it.
         var val = ((amount + 1) * (int)(bpm.mspb)) + TimingMilli;
         var check = ((val) == (noteTimeMilli));//needed
 
@@ -223,10 +229,13 @@ public class TimeSig
     /// <returns>The zero-based beat index within the measure.</returns>
     public int GetNextBeat(double noteTime, Tempo tempo)
     {
+        // Count completed beat intervals since the active tempo began.
         var currentTime = noteTime - tempo.timing;
         var amount = (int)Math.Floor(currentTime / tempo.bpm.spb);
+        // Convert the signature to its effective number of quarter-note beat positions.
         var beatsCalc = beats * (note / 4f);
 
+        // Select the upcoming beat position, then wrap it to the current measure.
         var val = ((amount + 1) * tempo.bpm.spb) + tempo.timing;
         var check = (val == noteTime);
 
@@ -241,10 +250,12 @@ public class TimeSig
     /// <returns>The zero-based beat index within the measure.</returns>
     public int GetNextBeatMilli(int noteTimeMilli, Tempo tempo)
     {
+        // Compute completed beat intervals using the millisecond representation.
         var currentTime = noteTimeMilli - tempo.TimingMilli;
         var amount = (int)Math.Floor((double)currentTime / (tempo.bpm.mspb));
         var beatsCalc = beats * (note / 4f);
 
+        // Select the next beat index and wrap it at the measure length.
         var val = ((amount + 1) * tempo.bpm.mspb) + tempo.TimingMilli;
         var check = (val == noteTimeMilli);
 
@@ -290,6 +301,7 @@ public class TempoMap
     /// </summary>
     public void Init()
     {
+        // Ensure both collections exist before adding their required defaults.
         if(tempos == null)
             tempos = new List<Tempo>();
         if(timeSigs == null)
@@ -300,6 +312,7 @@ public class TempoMap
         if(timeSigs.Count == 0)
             timeSigs.Add(TimeSig.CommonTime);
 
+        // Keep effective-entry lookups ordered by their start times.
         Sort();
     }
 
@@ -326,6 +339,7 @@ public class TempoMap
     /// <param name="tempo">Tempo instance to add.</param>
     public void AddTempo(Tempo tempo)
     {
+        // Add the change, then restore defaults/order through shared initialization.
         tempos.Add(tempo);
         Init();
     }
@@ -343,6 +357,7 @@ public class TempoMap
     /// <param name="tempo">Tempo instance to remove.</param>
     public void RemoveTempo(Tempo tempo)
     {
+        // Remove the selected entry and reinitialize in case the list became empty.
         tempos.Remove(tempo);
         Init();
     }
@@ -362,6 +377,7 @@ public class TempoMap
     /// <param name="timeSig">TimeSig instance to add.</param>
     public void AddTimeSig(TimeSig timeSig)
     {
+        // Add the change, then restore defaults/order through shared initialization.
         timeSigs.Add(timeSig);
         Init();
     }
@@ -379,6 +395,7 @@ public class TempoMap
     /// <param name="tempo">TimeSig instance to remove.</param>
     public void RemoveTimeSig(TimeSig tempo)
     {
+        // Remove the selected entry and reinitialize in case the list became empty.
         timeSigs.Remove(tempo);
         Init();
     }
@@ -392,6 +409,7 @@ public class TempoMap
     {
         if(tempos.Count == 0) return null;
 
+        // Use the latest entry already in effect; before the first entry, use the first one.
         try { return tempos.Last(t => t.timing <= noteTime); }
         catch { return tempos[0]; }
     }
@@ -404,6 +422,7 @@ public class TempoMap
     {
         if(tempos.Count == 0) return new List<Tempo>() { };
 
+        // Resolve the active change time, then return every entry sharing that timestamp.
         noteTime = GetTempo(noteTime).timing;
 
         try { return tempos.Where(t => t.timing == noteTime).ToList(); }
@@ -419,6 +438,7 @@ public class TempoMap
     {
         if(timeSigs.Count == 0) return null;
 
+        // Use the latest entry already in effect; before the first entry, use the first one.
         try { return timeSigs.Last(t => t.timing <= noteTime); }
         catch { return timeSigs[0]; }
 
@@ -432,6 +452,7 @@ public class TempoMap
     public List<TimeSig> GetTimeSigs(double noteTime)
     {
         if(timeSigs.Count == 0) return null;
+        // Resolve the active signature time, then return all entries at that time.
         noteTime = GetTimeSig(noteTime).timing;
 
         try { return timeSigs.Where(t => t.timing == noteTime).ToList(); }
@@ -443,6 +464,7 @@ public class TempoMap
     /// </summary>
     public void Clear()
     {
+        // Empty both collections; initialization repopulates the default tempo and meter.
         tempos.Clear();
         timeSigs.Clear();
         Init();
@@ -455,6 +477,7 @@ public class TempoMap
     public TempoMap Clone() =>
         new TempoMap()
         {
+            // Clone entries so edits to the new map do not mutate the original entries.
             tempos = tempos.Select(t => t?.Clone()).ToList(),
             timeSigs = timeSigs.Select(t => t?.Clone()).ToList()
         };

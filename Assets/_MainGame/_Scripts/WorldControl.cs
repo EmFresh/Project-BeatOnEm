@@ -56,7 +56,6 @@ public class WorldControl : MonoBehaviour
 
 
 
-	// Update is called once per frame
 	/// <summary>Moves the world along the negative Z axis while it is not paused.</summary>
 	void Update()
 	{

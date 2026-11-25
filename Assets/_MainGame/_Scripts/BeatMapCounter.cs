@@ -6,7 +6,10 @@
 using System.Threading.Tasks;
 
 using UnityEngine;
+using UnityEngine.Jobs;
 using UnityEngine.Events;
+
+using Unity.Jobs;
 
 
 /// <summary>
@@ -52,7 +55,6 @@ public class BeatMapCounter : MonoBehaviour
             if(tickSound != null)
             {
                 (manager.AudioSource)?.PlayOneShot(tickSound, 2);
-                // print("Tick");
             }
         });
         onTock.AddListener((tempo, timeSig) =>
@@ -60,22 +62,14 @@ public class BeatMapCounter : MonoBehaviour
             if(tockSound != null)
             {
                 (manager.AudioSource)?.PlayOneShot(tockSound, 2);
-                //    print("tock");
             }
         });
         onBeat.AddListener((tempo, timeSig) =>
         {
-            // print(timeSig.GetNextBeat(clip.time, tempo));
-            // print($"Time Samples: {(manager.AudioSource)?.timeSamples}" +
-            //     $"Time Samples/Frequency: {(manager.AudioSource)?.timeSamples * 1000 / manager.AudioSource.clip.frequency}");
         });
+  }
 
-    }
-
-
-
-
-
+ 
     /// <summary>Time in milliseconds at which the next beat is expected.</summary>
     int nextBeatTime = 0;
     /// <summary>Tempo currently used to evaluate the beat sequence.</summary>
@@ -86,15 +80,15 @@ public class BeatMapCounter : MonoBehaviour
     /// <summary>
     /// Polls the audio playback position and fires tick/tock/beat events when beats are reached.
     /// </summary>
-    // Update is called once per frame
     void Update()
     {
 
+        // Apply the configured offset to sample-accurate playback time before comparing beat boundaries.
         var time = manager.AudioSource.AccurateTimeMilli() + audioOffsetMilli;
 
         if(time >= (nextBeatTime) && currentTempo != null)
         {
-
+            // Classify the reached beat within the measure, then notify both specific and general listeners.
             if(currentTimeSig.GetNextBeatMilli(time, currentTempo) - 1 == 0)
                 onTick?.Invoke(currentTempo, currentTimeSig);
             else
@@ -104,14 +98,15 @@ public class BeatMapCounter : MonoBehaviour
 
         }
 
+
         if(time < nextBeatTime && Mathf.Abs(nextBeatTime - time) < (currentTempo?.bpm?.mspb ?? 0)) return;
-        // print("change tempo");
-
-
+        
+        // Look ahead by one beat, apply that segment's meter-adjusted tempo, and schedule its next boundary.
         currentTempo = manager.MapTrack.tempoMap.GetTempo((time + currentTempo?.bpm.mspb ?? 0) / 1000d).Clone();
         currentTimeSig = manager.MapTrack.tempoMap.GetTimeSig((time + currentTempo?.bpm.mspb ?? 0) / 1000d).Clone();
 
-        currentTempo.bpm *= currentTimeSig.note / (float)currentTimeSig.beats;//adjust tempo to fit the beat divisions of the time signature
+        // Scale the tempo to the beat unit specified by the current time signature.
+        currentTempo.bpm *= currentTimeSig.note / (float)currentTimeSig.beats;
 
         nextBeatTime = currentTempo.GetNextBeatMilli(time);
     }

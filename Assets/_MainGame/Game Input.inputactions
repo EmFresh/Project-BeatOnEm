@@ -143,6 +143,35 @@
                     "isPartOfComposite": false
                 }
             ]
+        },
+        {
+            "name": "Setting Buttons",
+            "id": "d0a994f1-f283-4fe8-8673-51dee8e31143",
+            "actions": [
+                {
+                    "name": "Reheight",
+                    "type": "Button",
+                    "id": "084bcbeb-b1fc-47c4-a287-e3992103a966",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false,
+                    "priority": 0
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "e6491983-11cc-44cd-8583-e1e1117b3ff8",
+                    "path": "<XRController>{LeftHand}/joystickClicked",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Reheight",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
         }
     ],
     "controlSchemes": []

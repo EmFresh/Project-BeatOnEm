@@ -92,6 +92,7 @@ public class TimeBar : MonoBehaviour
     public void Fallow(double time)
 
     {
+        // Normalize playback time and determine how much of the timeline content is visible.
         var clip = mapEditManager.AudioSource.clip;
         var timebarPos = time / clip.AccurateLength();
 
@@ -113,6 +114,7 @@ public class TimeBar : MonoBehaviour
 
         float fallowPoint = .5f;
         float min = .0f, max = .5f;
+        // Keep the playhead in the preferred viewport interval; otherwise scroll it back toward the follow point.
         if(!InRange(timebarPos + Mathf.Lerp(0, m_vertical ? viewSizeNorm.y : viewSizeNorm.x, (float)timebarPos),
             tmpPos + (m_vertical ? viewSizeNorm.y : viewSizeNorm.x) * min, tmpPos + (m_vertical ? viewSizeNorm.y : viewSizeNorm.x) * max))
         {
@@ -122,6 +124,7 @@ public class TimeBar : MonoBehaviour
         }
 
 
+        // Apply the updated scroll coordinate on the active timeline axis.
         sr.normalizedPosition = m_vertical ? new Vector2(0, tmpPos) : new Vector2(tmpPos, 0);
 
 

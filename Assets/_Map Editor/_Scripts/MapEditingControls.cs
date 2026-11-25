@@ -74,6 +74,7 @@ public class MapEditingControls : MonoBehaviour
         {
             if(input.performed)
             {
+                // Raycast at the pointer to locate the timeline under the user's cursor.
                 var pointer = new PointerEventData(EventSystem.current);
                 pointer.position = Mouse.current.position.value;
                 EventSystem.current.RaycastAll(pointer, results);
@@ -96,6 +97,7 @@ public class MapEditingControls : MonoBehaviour
                 // Toast.SendToast($"Timeline: \n{pointer.position}");
 
 
+                // Convert the pointer to content space and normalize its position for zoom anchoring.
                 var vert = mapEditManager.tempoMarkManager.vertical;
                 var val = input.ReadValue<Vector2>();
                 var scrollPos = scrollRect.normalizedPosition;
@@ -108,7 +110,7 @@ public class MapEditingControls : MonoBehaviour
                 normPos.x = vert ? 0 : normPos.x;
 
                 
-                // Calculate new content size by applying the input value (val.y) as a scale factor on the timeline size
+                // Scale only the scrollable axis, leaving the orthogonal content dimension unchanged.
                 var timelineRect = timeline.GetComponent<RectTransform>().rect.size;
                 var oldContentSize = scrollRect.content.rect.size;
                 var deltaSize = new Vector2(
@@ -121,7 +123,7 @@ public class MapEditingControls : MonoBehaviour
                 if(vert ? Mathf.Approximately(deltaSize.y, 0f) : Mathf.Approximately(deltaSize.x, 0f))
                     return;
 
-                // Apply new sizes to the content rect
+                // Apply the new dimensions, then offset content so the point under the cursor stays fixed.
                 scrollRect.content.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, newContentSize.x);
                 scrollRect.content.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, newContentSize.y);
 

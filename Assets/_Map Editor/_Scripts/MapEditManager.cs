@@ -23,7 +23,6 @@ using Newtonsoft.Json.Linq;
 using SimpleFileBrowser;
 
 using UnityEditor;
-using UnityEditor.Rendering;
 
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -78,37 +77,15 @@ public interface ISongManager
 
         try
         {
-
+            // Convert the MessagePack model to readable JSON for the package entry.
             var ser =
                 JToken.Parse(MessagePackSerializer.SerializeToJson(MapTrack, MPOptions)).ToString(Formatting.Indented);
 
             List<byte[]> serializedEnemis = new List<byte[]>();
             List<byte[]> serializedNotes = new List<byte[]>();
 
-            MapTrack.enemyPrefabs.ForEach((prefab) =>
-            {
-                var prefabPath = AssetDatabase.GetAssetPath(prefab);
-                if(string.IsNullOrEmpty(prefabPath))
-                {
-                    prefabPath = AssetDatabase.GetAssetPath(
-                        PrefabUtility.SaveAsPrefabAsset(prefab, Path.Combine(Application.temporaryCachePath, "enemy.prefab")));
-                }
 
-                serializedEnemis.Add(Encoding.Unicode.GetBytes(File.ReadAllText(prefabPath)));
-            });
-            MapTrack.notePrefabs.ForEach((prefab) =>
-            {
-                var prefabPath = AssetDatabase.GetAssetPath(prefab);
-                if(string.IsNullOrEmpty(prefabPath))
-                {
-                    prefabPath = AssetDatabase.GetAssetPath(
-                        PrefabUtility.SaveAsPrefabAsset(prefab, Path.Combine(Application.temporaryCachePath, "note.prefab")));
-                }
-                serializedNotes.Add(Encoding.Unicode.GetBytes(File.ReadAllText(prefabPath)));
-
-            });
-
-            //  ser = JsonUtility.ToJson(ser, true);
+            // Validate the audio asset and ensure the package destination exists before writing entries.
             if(!File.Exists(audioPath))
                 throw new FileNotFoundException("Audio file not found.");
 
@@ -117,6 +94,7 @@ public interface ISongManager
 
             using(var fileStream = new FileStream(Path.Combine(saveDir, name), FileMode.OpenOrCreate))
             {
+                // Store map data and its audio asset together in the map archive.
                 using(var archive = new ZipArchive(fileStream, ZipArchiveMode.Create, false))
                 {
                     using(var entryStream = archive.CreateEntry("data.json", CompressionLevel.Optimal).Open())
@@ -127,15 +105,11 @@ public interface ISongManager
             }
 
 
-            //  print($"Saved file [{phase.ToString()}]");
         }
         catch(Exception e)
         {
-            Debug.LogError($"{e}");
+            Toast.SendToast($"{e}", Toast.ToastType.Error);
         }
-        //  print(JsonUtility.ToJson(pile.ocupado,true));
-
-        // return true;
     }
 
     /// <summary>
@@ -163,9 +137,7 @@ public interface ISongManager
         try
         {
             string json = null;
-            //SongTrack track = null;
-
-
+            // Open the archive and process each map or audio entry by file type.
             using(var archive = ZipFile.OpenRead(path))
             {
                 foreach(var entry in archive.Entries)
@@ -174,14 +146,14 @@ public interface ISongManager
                     {
                         using(var reader = new StreamReader(entry.Open(), Encoding.Unicode))
                         {
-                            Toast.SendToast($"Loading JSON file: {entry.FullName}");
+                            //  Toast.SendToast($"Loading JSON file: {entry.FullName}");
                             json = reader.ReadToEnd();
-                            //json = Encoding.Unicode.GetString(Encoding.Unicode.GetBytes(json));
+                            // Convert the JSON payload back into the serialized track model and copy it into the active map.
                             var track = MessagePackSerializer.Deserialize<SongTrack>(
                                     MessagePackSerializer.ConvertFromJson(json, MPOptions), MPOptions);
 
                             MapTrack?.Copy(track, excludePrefabs: excludePrefabs);
-                            Toast.SendToast($"Loaded JSON file: {entry.FullName}");
+                            //  Toast.SendToast($"Loaded JSON file: {entry.FullName}");
                         }
                     }
 
@@ -189,13 +161,14 @@ public interface ISongManager
                        entry.Name.EndsWith(".wav", StringComparison.CurrentCultureIgnoreCase) ||
                        entry.Name.EndsWith(".ogg", StringComparison.CurrentCultureIgnoreCase))
                     {
+                        // Extract the audio entry to a temporary file so Unity can decode it asynchronously.
                         var tmpPath = Path.Combine(Application.temporaryCachePath, "music" + Path.GetExtension(entry.Name));
                         entry.ExtractToFile(tmpPath, true);
                         using(var request = UnityWebRequestMultimedia.GetAudioClip(tmpPath, AudioType.UNKNOWN))
                         {
-                            Toast.SendToast($"Loading audio file: {tmpPath}");
+                            // Toast.SendToast($"Loading audio file: {tmpPath}");
 
-                            // Wait for completion  
+                            // Wait for decoding, report failures, and assign the resulting clip when available.
                             await request.SendWebRequest();
 
                             if(request.result != UnityWebRequest.Result.Success)
@@ -205,31 +178,21 @@ public interface ISongManager
                             if(clip != null)
                                 AudioSource.clip = clip; // set the AudioSource clip if desired
 
-                            Toast.SendToast(clip != null
-                                ? $"Loaded audio file: {tmpPath}"
-                                : $"Failed to load audio file: {tmpPath}");
+                            //Toast.SendToast(clip != null
+                            //    ? $"Loaded audio file: {tmpPath}"
+                            //    : $"Failed to load audio file: {tmpPath}");
                         }
+                        // The clip is loaded into memory, so remove the temporary extracted file.
                         File.Delete(tmpPath);
                     }
                 }
             }
-
-
-
-            // var json = File.ReadAllText(path);
-            // var track =
-            // MessagePackSerializer.Deserialize<SongTrack>(
-            //     MessagePackSerializer.ConvertFromJson(json, MPOptions), MPOptions);
-
-            //return track;
-            //JsonConvert.DeserializeObject<SongTrack>(json);      
         }
         catch(Exception e)
         {
             Toast.SendToast($"{e}", Toast.ToastType.Error);
         }
 
-        //  return null;
     }
 
 }
@@ -377,11 +340,7 @@ public class MapEditManager : ActionHistory, ISongManager
             Toast.SendToast($"Error saving file: {e.Message}");
         }
         Toast.SendToast($"File saved to ({Path.Combine(saveDir, name)})");
-        //  print(JsonUtility.ToJson(pile.ocupado,true));
-
-        // return true;
     }
-
 
     /// <summary>Opens a file picker and loads the selected map package.</summary>
     public void LoadFile() =>
@@ -396,7 +355,7 @@ public class MapEditManager : ActionHistory, ISongManager
     /// <returns><see langword="true"/> when the file exists and the load operation is invoked; otherwise, <see langword="false"/>.</returns>
     public async Task<bool> LoadFile(string path)
     {
-        //print($"Path to file: {path}");
+        // Stop immediately when the selected path does not exist.
         if(!File.Exists(path))
         {
             Toast.SendToast($"File not found: {path}");
@@ -404,6 +363,7 @@ public class MapEditManager : ActionHistory, ISongManager
         }
 
 
+        // Load map data/audio first, then refresh editor markers and visuals from the new state.
         await ((ISongManager)this).LoadFile(path, MPOptions: MPOptions);
 
         tempoMarkManager?.MarkerUpdate();
@@ -414,12 +374,46 @@ public class MapEditManager : ActionHistory, ISongManager
         return true;
     }
 
+    public void AutoCreateTempoList()
+    {
+        var tempoList = audioSource.clip.GetTempoList();
+        var oldList = MapTrack.tempoMap.tempos.ToList();
+
+        MapTrack.tempoMap.tempos.Clear();
+        foreach(var tempo in tempoList)
+            MapTrack.tempoMap.AddTempo(tempo.bpm, tempo.timing);
+
+        tempoMarkManager.MarkerUpdate();
+
+        AddToActionHistory(t =>
+        {
+            switch(t)
+            {
+            case ActionType.Undo:
+                MapTrack.tempoMap.tempos.Clear();
+                foreach(var tempo in oldList)
+                    MapTrack.tempoMap.AddTempo(tempo.bpm, tempo.timing);
+                tempoMarkManager.MarkerUpdate();
+                Toast.SendToast($"Undo: Undid Auto Tempo");
+                break;
+            case ActionType.Redo:
+                MapTrack.tempoMap.tempos.Clear();
+                foreach(var tempo in tempoList)
+                    MapTrack.tempoMap.AddTempo(tempo.bpm, tempo.timing);
+                tempoMarkManager.MarkerUpdate();
+                Toast.SendToast($"Redo: Restored Auto Tempo");
+                break;
+            }
+        }, nested: false);
+    }
+
     /// <summary>Adds a tempo change and records the operation for undo and redo.</summary>
     /// <param name="BPM">Tempo in beats per minute.</param>
     /// <param name="time">Time in seconds at which the tempo takes effect.</param>
     /// <param name="nested">Whether this operation is part of another history action.</param>
     public void AddTempo(float BPM, double time, bool nested = false)
     {
+        // Update the data model and visible markers before registering the inverse operation.
         MapTrack.tempoMap.AddTempo(BPM, time);
         tempoMarkManager.MarkerUpdate();
 
@@ -471,6 +465,7 @@ public class MapEditManager : ActionHistory, ISongManager
     /// <param name="nested">Whether this operation is part of another history action.</param>
     public void EditTempo(float tempo, double time, bool nested = false)
     {
+        // Preserve the previous entry so undo can restore its exact value and effective time.
         var oldTempo = MapTrack.tempoMap.GetTempo(time).Clone();
 
         MapTrack.tempoMap.GetTempo(time).bpm = tempo;
@@ -499,6 +494,7 @@ public class MapEditManager : ActionHistory, ISongManager
     /// <param name="nested">Whether this operation is part of another history action.</param>
     public void EditTimeSig(int beats, int note, double time, bool nested = false)
     {
+        // Snapshot the old signature, mutate the active entry, then refresh markers and history.
         var oldSig = MapTrack.tempoMap.GetTimeSig(time).Clone();
         var sig = MapTrack.tempoMap.GetTimeSig(time);
         sig.note = note;
@@ -527,6 +523,7 @@ public class MapEditManager : ActionHistory, ISongManager
     /// <param name="nested">Whether this operation is part of another history action.</param>
     public void RemoveTempo(double time, bool nested = false)
     {
+        // Save the removed entry and list size because undo may need to restore the default entry as well.
         var oldTempo = MapTrack.tempoMap.GetTempo(time).Clone();
         int count = MapTrack.tempoMap.tempos.Count;
 
@@ -558,6 +555,7 @@ public class MapEditManager : ActionHistory, ISongManager
     /// <param name="nested">Whether this operation is part of another history action.</param>
     public void RemoveTimeSig(double time, bool nested = false)
     {
+        // Snapshot the effective signature before removal so the history callback can restore it.
         var oldTimSig = MapTrack.tempoMap.GetTimeSig(time).Clone();
         MapTrack.tempoMap.RemoveTimeSig(time);
         tempoMarkManager.MarkerUpdate();
@@ -586,7 +584,7 @@ public class MapEditManager : ActionHistory, ISongManager
     /// <param name="nested">Whether this operation is part of another history action.</param>
     public void AddEnemy(int lane, int hitLocationsIndex, double duration, double spawnTime, bool nested = false)
     {
-
+        // Find the lane's editor slot, create a beat section if needed, and update its timing/metadata.
         var pile = AddToTheBodyPile.pile.Find((pile) => pile.laneNum == lane);
 
         if(pile.ocupado == null)
@@ -600,6 +598,7 @@ public class MapEditManager : ActionHistory, ISongManager
             pile.ocupado.endTime = pile.ocupado.startTime + duration;
         }
 
+        // Capture the resulting section for history and use its start time when restoring the playhead.
         var beat = pile.ocupado?.Clone();
         AddToActionHistory(t =>
         {
@@ -627,6 +626,7 @@ public class MapEditManager : ActionHistory, ISongManager
     /// <param name="nested">Whether this operation is part of another history action.</param>
     public void RemoveEnemy(int lane, bool nested = false)
     {
+        // Preserve the section before clearing both the map entry and the lane's active editor slot.
         var pile = AddToTheBodyPile.pile.Find((pile) => pile.laneNum == lane);
 
         if(pile.ocupado == null) return;
@@ -670,6 +670,7 @@ public class MapEditManager : ActionHistory, ISongManager
     /// <param name="nested">Whether this operation is part of another history action.</param>
     public void AddNote(int lane, int hitLocation, HitType hitType, bool nested = false)
     {
+        // Resolve the selected lane's beat section and add a note at the current playhead time.
         var pile = AddToTheBodyPile.pile.Find((pile) => pile.laneNum == lane);
         var beat = pile.ocupado;
 
@@ -677,6 +678,7 @@ public class MapEditManager : ActionHistory, ISongManager
         beat?.AddNote(seekBar.currentTime, hitLocation, hitType);
 
 
+        // Snapshot the section so undo/redo can seek back to the same context.
         var beatClone = beat?.Clone();
 
         AddToActionHistory(t =>
@@ -708,7 +710,7 @@ public class MapEditManager : ActionHistory, ISongManager
     /// <param name="nested">Whether this operation is part of another history action.</param>
     public void RemoveNote(int lane, double time, int hitLocation, HitType hitType, float timePad, bool nested = false)
     {
-
+        // Find the lane section and retain a copy before removing the matching note.
         var pile = AddToTheBodyPile.pile.Find((pile) => pile.laneNum == lane);
         var beat = pile.ocupado;
         var oldBeat = beat?.Clone();
@@ -738,12 +740,13 @@ public class MapEditManager : ActionHistory, ISongManager
     /// <summary>Updates lane hit-location visuals and note colors for the current song time.</summary>
     public void UpdateVisuals()
     {
+        // Use live audio time during playback and the editor playhead while paused.
         var time = AudioSource.isPlaying ? AudioSource.time : seekBar.currentTime;
 
         var liljon = AddToTheBodyPile.pile;
         var enemies = MapTrack.GetEnemies(time);
 
-        //remove all unused images
+        // Clear lane previews that are no longer associated with a beat active at this time.
         foreach(var lane in liljon)
             //if(!enemies.Any(p => p.laneIndex == lane.laneNum) && lane.ocupado)
             if((lane.ocupado != null && !enemies.Any(p => p.laneIndex == lane.laneNum)) ||
@@ -761,7 +764,7 @@ public class MapEditManager : ActionHistory, ISongManager
             }
 
 
-        //add images for all enemies in range
+        // Create or refresh each active lane preview, then color its hit points from nearby notes.
         foreach(var enemy in enemies)
         {
             var pile = liljon.Find((pile) => pile.laneNum == enemy.laneIndex);
@@ -773,6 +776,7 @@ public class MapEditManager : ActionHistory, ISongManager
                 //add if not already present
                 if(!visualizer.enabled)
                 {
+                    // Add one non-interactive preview image and wire each hit point to editor mouse actions.
                     pile.ocupado = enemy;
                     //visualizer.scale = Vector3.one * 100 * 3;
 
@@ -805,7 +809,6 @@ public class MapEditManager : ActionHistory, ISongManager
                         }
                     });
                     visualizer.enabled = true;
-                    // visualizer.VisualUpdate();
                 }
             }
 
@@ -814,12 +817,8 @@ public class MapEditManager : ActionHistory, ISongManager
                 visualizer.SetColour2D(a, Color.white);
 
             foreach(var note in notes)
-                //visualizer.SetColour2D(note.hitLocation, Color.green);
                 visualizer.SetColour2D(note.hitLocation, Color.Lerp(Color.green, Color.white, Mathf.InverseLerp((float)note.hitTiming - timePad, (float)note.hitTiming + timePad, (float)time) - .5f));
 
-
-
-            //  print("Completed updating visuals");
         }
     }
 

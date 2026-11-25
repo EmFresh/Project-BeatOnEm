@@ -112,7 +112,7 @@ public class TempoMarkManager : MonoBehaviour
     /// <param name="widthP">Optional normalized width multiplier for the marker visual (defaults to 1).</param>
     public void CreateMarker(double time, float widthP = 1)
     {
-        // Instantiate marker prefab under markerParent and track the instance
+        // Create and register the marker before assigning its event data and layout.
         beatMarkers.Add(Instantiate(tmpMarker, markerParent, false));
         var marker = beatMarkers.Last();
         var markerTrans = marker.GetComponent<RectTransform>();
@@ -132,7 +132,7 @@ public class TempoMarkManager : MonoBehaviour
     /// </summary>
     public void MarkerUpdate()
     {
-        // Remove existing markers
+        // Rebuild from scratch so markers reflect the current scroll range and tempo map.
         foreach(var mark in beatMarkers)
             Destroy(mark);
         beatMarkers.Clear();
@@ -142,7 +142,7 @@ public class TempoMarkManager : MonoBehaviour
 
         var scrollPos = rect.normalizedPosition;
 
-        // View size relative to the content size (normalized)
+        // Convert the viewport and scroll offset into the visible normalized song interval.
         var viewSizeNorm = rt.rect.size / sr.content.rect.size;//view size in relation to content size
         viewSizeNorm.y =MathF.Abs(viewSizeNorm.y);
 
@@ -159,7 +159,7 @@ public class TempoMarkManager : MonoBehaviour
         //Toast.SendToast($"Start Time: {startTime} End Time: {endTime}");
         //Toast.SendToast($"View Size Norm: {viewSizeNorm} Scroll Pos: {scrollPos} RT Size: {rt.rect.size} Content Size: {sr.content.sizeDelta}");
 
-        // Iterate through beats in the visible millisecond range and create markers
+        // Walk forward from the visible start, recalculating active meter and beat spacing as changes occur.
         while(startTime < endTime)
         {
             var tempo = mapEditManager.MapTrack.tempoMap.GetTempo(startTime / 1000d).Clone();
@@ -169,14 +169,14 @@ public class TempoMarkManager : MonoBehaviour
             // Adjust BPM to match the division used for beat subdivision calculations
             tempo.bpm *= timeSig.note / 4f;//adjust tempo to fit the beat divisions of the time signature
 
-            // Position startTime to just before the next beat so calculations below resolve the current beat index
+            // Align to the current beat boundary, then derive its zero-based position within the measure.
             startTime = tempo.GetNextBeatMilli(startTime) - tempo.bpm.mspb;
             var currentBeat = (((tempo.GetNextBeatMilli(startTime) - tempo.bpm.mspb - tempo.TimingMilli) / tempo.bpm.mspb));//needs to be done this way
 
             float widthP = .8f;
             var beatOfBar = (currentBeat) % (beatsCalc);
 
-            // Determine visual subdivision size based on beats per bar
+            // Narrow the marker width for subdivisions according to simple or compound meter.
             if(beatOfBar != 0)
             {
                 int divCount = 0;
@@ -220,6 +220,7 @@ public class TempoMarkManager : MonoBehaviour
                 }
             }
 
+            // Emit this marker, then advance; the guard prevents a malformed tempo from stalling the loop.
             CreateMarker(startTime / 1000d, widthP: widthP);
             var beat = tempo.GetNextBeatMilli(startTime);
 
